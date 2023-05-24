@@ -2,4 +2,4 @@
 
 __author__ = """California Department of Water Resources"""
 __email__ = 'knam@water.ca.gov'
-__version__ = '0.1.0'
+__version__ = '0.1.1'
