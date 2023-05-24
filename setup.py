@@ -10,27 +10,30 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=7.0', ]
+requirements = ['uxarray>=2023.4.1', 'xarray>=2023.4.1',
+                'netcdf4>=1.6', 'shapely>=2.0',
+                'Click>=7.0', ]
 
-test_requirements = ['pytest>=3', ]
+extra_requirements = {}
+extra_requirements['vtk'] = ['vtk>=9.2']
+
+test_requirements = requirements + ['pytest>=3', ] + extra_requirements['vtk']
 
 setup(
     author="California Department of Water Resources",
     author_email='knam@water.ca.gov',
-    python_requires='>=3.6',
+    python_requires='>=3.8,<3.11',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
     ],
-    description="SUXarray is an extension of uxarray for SCHISM.",
+    description="suxarray is an extension of uxarray for SCHISM.",
     entry_points={
         'console_scripts': [
             'suxarray=suxarray.cli:main',
@@ -48,4 +51,5 @@ setup(
     url='https://github.com/cadwrdeltamodeling/suxarray',
     version='0.1.0',
     zip_safe=False,
+    extras_require=extra_requirements
 )
