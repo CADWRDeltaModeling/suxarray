@@ -10,12 +10,12 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['uxarray>=2023.4.1', 'xarray>=2023.4.1',
-                'netcdf4>=1.6', 'shapely>=2.0',
-                'Click>=7.0', ]
+requirements = ['uxarray>=2023.4.1',
+                'netcdf4', 'shapely>=2.0',
+                'Click>=7.0']
 
 extra_requirements = {}
-extra_requirements['vtk'] = ['vtk>=9.2']
+extra_requirements['vtk'] = ['vtk']
 
 test_requirements = requirements + ['pytest>=3', ] + extra_requirements['vtk']
 
@@ -49,7 +49,7 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/cadwrdeltamodeling/suxarray',
-    version='0.1.1',
+    version='0.1.2',
     zip_safe=False,
     extras_require=extra_requirements
 )
