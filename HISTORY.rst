@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.3 (2023-05-30)
+------------------
+Fixed
+^^^^^
+* Add a missing import in __init__.py
+
 0.1.2 (2023-05-24)
 ------------------
 Remove some dependency version limits. No functional changes.

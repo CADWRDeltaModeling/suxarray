@@ -2,4 +2,6 @@
 
 __author__ = """California Department of Water Resources"""
 __email__ = 'knam@water.ca.gov'
-__version__ = '0.1.2'
+__version__ = '0.1.3'
+
+from .suxarray import *
