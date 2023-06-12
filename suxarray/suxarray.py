@@ -7,9 +7,11 @@ import numpy as np
 import pandas as pd
 import numba
 import xarray as xr
+from xarray.core.utils import UncachedAccessor
 from shapely.geometry import Polygon, Point
 from shapely.strtree import STRtree
 import uxarray as ux
+import suxarray.hvplot
 
 
 class Grid(ux.Grid):
@@ -313,6 +315,8 @@ class Grid(ux.Grid):
             v), self.face_polygons, dask="parallelized", output_dtypes=float)
         return ret
 
+    # Add plot methods
+    hvplot = UncachedAccessor(suxarray.hvplot.PlotMethods)
 
 # TODO separate utility functions to another file
 def renumber_nodes(a, fill_value: int = None):
