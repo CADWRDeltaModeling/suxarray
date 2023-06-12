@@ -5,7 +5,7 @@ SCHISM grid.
 """
 import numpy as np
 import pandas as pd
-import numba
+from numba import njit
 import xarray as xr
 from xarray.core.utils import UncachedAccessor
 from shapely.geometry import Polygon, Point
@@ -233,6 +233,38 @@ class Grid(ux.Grid):
         grid_subset = Grid(ds)
         return grid_subset
 
+    def face_average(self, dataarray: xr.DataArray) -> xr.DataArray:
+        """Calculate face average of a variable
+
+        Parameters
+        ----------
+        dataarray: xr.DataArray, required
+            Input variable
+
+        Returns
+        -------
+        da : xr.DataArray
+            Face averaged variable
+        """
+        da_result = xr.apply_ufunc(
+            face_average,
+            dataarray.load(),
+            self.Mesh2_face_nodes,
+            self.Mesh2_face_dimension,
+            exclude_dims=set(
+                ["nSCHISM_hgrid_node",
+                 "nSCHISM_hgrid_face",
+                 "nMaxSCHISM_hgrid_face_nodes"]
+            ),
+            input_core_dims=[
+                ["nSCHISM_hgrid_node", ],
+                ["nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"],
+                ["nMesh2_face",]],
+            output_core_dims=[["nMesh2_face",]],
+            dask="parallelized"
+        )
+        return da_result
+
     def depth_average(self, var_name):
         """ Calculate depth-average of a variable
 
@@ -441,6 +473,37 @@ def triangulate(grid):
     grid_tri = Grid(ds_tri, islation=False, mesh_type="ugrid")
     # grid_tri.Mesh2.attrs['start_index'] = 0
     return grid_tri
+
+
+@njit
+def face_average(val, face_nodes, face_geometry):
+    """Calculate face average of a variable
+
+    Calculate average of a variable at each face. No weighting is applied.
+
+    Parameters
+    ----------
+    face_nodes: ndarray, required
+        Face-node connectivity array
+    face_geometry: ndarray, required
+        Number of nodes per face
+
+    Returns
+    -------
+    xarray.DataArray
+        Face averaged variable
+    """
+    n_face, _ = face_nodes.shape
+
+    # set initial area of each face to 0
+    result = np.zeros(val.shape[:-1] + (n_face,))
+
+    for face_idx, max_nodes in enumerate(face_geometry):
+        avg = (val[..., face_nodes[face_idx, 0:max_nodes]].sum(axis=-1)
+               / max_nodes)
+        result[..., face_idx] = avg
+
+    return result
 
 
 def read_hgrid_gr3(path_hgrid):
