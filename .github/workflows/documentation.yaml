@@ -12,8 +12,8 @@ jobs:
       - uses: actions/setup-python@v3
       - name: Install dependencies
         run: >
-          pip install uxarray pandas xarray numba netcdf4 shapely click
-          sphinx sphinx_rtd_theme nbsphinx
+          pip install uxarray pandas xarray numba netcdf4 shapely holoviews
+          datashader click sphinx sphinx_rtd_theme nbsphinx
       - name: Sphinx build
         run: |
           sphinx-build docs docs_build

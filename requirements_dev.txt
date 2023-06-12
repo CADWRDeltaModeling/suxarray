@@ -13,3 +13,4 @@ shapely>=2.0
 uxarray>=2023.4.1
 netcdf>=1.6
 xarray>=2023.4.1
+holoviews>=1.16.0
