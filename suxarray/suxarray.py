@@ -44,6 +44,15 @@ class Grid(ux.Grid):
         # The current SCHISM out2d does not have this variable.
         if get_topology_variable(dataset) is None:
             dataset = self.add_topology_variable(dataset)
+        # Adjust the 1-based node indices to 0-based
+        if 'start_index' in dataset.SCHISM_hgrid_face_nodes.attrs:
+            start_index = dataset.SCHISM_hgrid_face_nodes.attrs['start_index']
+            if start_index == 1:
+                dataset.update({"SCHISM_hgrid_face_nodes":
+                                dataset.SCHISM_hgrid_face_nodes - 1})
+                dataset.SCHISM_hgrid_face_nodes.attrs['start_index'] = 0
+            elif start_index != 0:
+                raise ValueError("start_index must be 0 or 1")
         # Initialize the super class
         super().__init__(dataset, **kwargs)
         # Add an optional edge node connectivity variable name
@@ -379,6 +388,8 @@ def triangulate(grid):
     n_triangle_per_row = n_per_row - 2
     face_ori = np.repeat(np.arange(n_face), n_per_row)
     node_ori = face_nodes.values.ravel()[valid.values.ravel()]
+    if face_nodes.attrs['start_index'] == 1:
+        node_ori -= 1
 
     def _triangulate(face_ori: np.ndarray, node_ori: np.ndarray,
                      n_triangle_per_row: xr.DataArray) -> np.ndarray:
@@ -449,13 +460,14 @@ def read_hgrid_gr3(path_hgrid):
     ds['SCHISM_hgrid_node_y'] = xr.DataArray(
         data=df_nodes[2].values, dims="nSCHISM_hgrid_node")
     # Replace NaN with -1
-    df_faces = df_faces.fillna(-1)
-    ds['SCHISM_hgrid_face_nodes'] = xr.DataArray(data=df_faces[[2, 3, 4, 5]].astype(int).values,
-                                                 dims=("nSCHISM_hgrid_face",
-                                                       "nMaxSCHISM_hgrid_face_nodes"),
-                                                 attrs={"start_index": 1,
-                                                        "cf_role": "face_node_connectivity",
-                                                        "_FillValue": -1})
+    df_faces = df_faces.fillna(0)
+    ds['SCHISM_hgrid_face_nodes'] = xr.DataArray(
+        data=df_faces[[2, 3, 4, 5]].astype(int).values - 1,
+        dims=("nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"),
+        attrs={"start_index": 0,
+               "cf_role": "face_node_connectivity",
+               "_FillValue": -1}
+        )
     ds['depth'] = df_nodes[3].values
     # Add dummy mesh_topology variable
     ds = Grid.add_topology_variable(ds)
