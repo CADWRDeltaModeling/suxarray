@@ -50,9 +50,14 @@ class Grid(ux.Grid):
         if 'start_index' in dataset.SCHISM_hgrid_face_nodes.attrs:
             start_index = dataset.SCHISM_hgrid_face_nodes.attrs['start_index']
             if start_index == 1:
+                original_attrs = dataset.SCHISM_hgrid_face_nodes.attrs
                 dataset.update({"SCHISM_hgrid_face_nodes":
                                 dataset.SCHISM_hgrid_face_nodes - 1})
+                dataset.SCHISM_hgrid_face_nodes.attrs.update(original_attrs)
                 dataset.SCHISM_hgrid_face_nodes.attrs['start_index'] = 0
+                fill_value = dataset.SCHISM_hgrid_face_nodes.attrs['_FillValue']
+                dataset.SCHISM_hgrid_face_nodes.attrs['_FillValue'] = \
+                    fill_value - 1
             elif start_index != 0:
                 raise ValueError("start_index must be 0 or 1")
         # Initialize the super class
@@ -81,7 +86,7 @@ class Grid(ux.Grid):
         ds[varname].attrs['face_node_connectivity'] = "SCHISM_hgrid_face_nodes"
         ds[varname].attrs['edge_node_connectivity'] = "SCHISM_hgrid_edge_nodes"
         ds[varname].attrs['Mesh2_layers'] = "zCoordinates"
-        ds[varname].attrs['start_index'] = 1
+        ds[varname].attrs['start_index'] = 0
 
         return ds
 
@@ -96,7 +101,7 @@ class Grid(ux.Grid):
             def create_polygon(node_indices):
                 # The node indices are 1-based
                 valid = node_indices != fill_value
-                ind = node_indices[valid] - 1
+                ind = node_indices[valid]
                 # Assuming the indices are positional
                 return Polygon(zip(node_x[ind], node_y[ind]))
 
@@ -180,12 +185,12 @@ class Grid(ux.Grid):
         face_subset = self.Mesh2_face_nodes[elem_ilocs, :]
         fill_value = self.Mesh2_face_nodes.attrs['_FillValue']
         node_subset = np.unique(face_subset.where(
-            face_subset > 0, drop=True).values).astype(int) - 1
+            face_subset >= 0, drop=True).values).astype(int)
         # Find edges in the subset
         # If the two nodes in an edge are in the node_subset, then the edge
         # is in the subset
         # Select the edges that are in the subset
-        mesh2_edge_nodes = self.ds.SCHISM_hgrid_edge_nodes.values - 1
+        mesh2_edge_nodes = self.ds.SCHISM_hgrid_edge_nodes.values
         edge_subset_mask = (np.isin(mesh2_edge_nodes[:, 0], node_subset) &
                             np.isin(mesh2_edge_nodes[:, 1], node_subset))
         edge_subset = mesh2_edge_nodes[edge_subset_mask, :]
@@ -465,13 +470,15 @@ def triangulate(grid):
     da_face_nodes = xr.DataArray(data=triangles,
                                  dims=(f"n{mesh_name}_face", "three"),
                                  name=f"{mesh_name}_face_nodes")
+    da_face_nodes.attrs['start_index'] = 0
+    da_face_nodes.attrs['cf_role'] = 'face_node_connectivity'
     ds_tri[da_face_nodes.name] = da_face_nodes
     da_elem_ind = xr.DataArray(data=triangle_original_ind,
                                dims=(f"n{mesh_name}_face"),
                                name=f"{mesh_name}_face_original")
     ds_tri[da_elem_ind.name] = da_elem_ind
     grid_tri = Grid(ds_tri, islation=False, mesh_type="ugrid")
-    # grid_tri.Mesh2.attrs['start_index'] = 0
+    grid_tri.Mesh2.attrs['start_index'] = 0
     return grid_tri
 
 
