@@ -1,7 +1,7 @@
 import xarray as xr
 
 
-def read_schism_nc(path_nc):
+def read_schism_nc(path_nc, **kwargs):
     """Read SCHISM NetCDF output files and return a suxarray Grid
 
     This function reads SCHISM output file(s) using `xarray.open_mfdataset` and
@@ -12,6 +12,7 @@ def read_schism_nc(path_nc):
     ----------
     path_nc : str, Path, or list
         Path pattern or list of file paths to the SCHISM NetCDF output file(s)
+    **kwargs : dict
 
     Return
     ------
@@ -19,7 +20,7 @@ def read_schism_nc(path_nc):
     """
     # Read the data
     ds = xr.open_mfdataset(
-       path_nc, data_vars="minimal", mask_and_scale=False
+       path_nc, data_vars="minimal", mask_and_scale=False, **kwargs
     )
 
     # Add extra information to make dataset CF compliant for convenience
