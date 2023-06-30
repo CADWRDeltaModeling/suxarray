@@ -15,7 +15,7 @@ def test_suxarray_init_with_out2d():
                          mask_and_scale=False)
     grid = sx.Grid(ds)
     assert grid.mesh_type == 'ugrid'
-    assert grid.ds.dims['nSCHISM_hgrid_node'] == 2639
+    assert grid.nMesh2_node == 2639
 
 
 def test_get_topology_variable():
@@ -38,15 +38,15 @@ def grid_test():
 def test_triangulate(grid_test):
     """ Test triangulate """
     grid_tri = sx.triangulate(grid_test)
-    assert grid_tri.ds.dims['nSCHISM_hgrid_node'] == 112
-    assert grid_tri.ds.dims['nSCHISM_hgrid_face'] == 168
+    assert grid_tri.nMesh2_node == 112
+    assert grid_tri.nMesh2_face == 168
 
 
 def test_triangulate_dask(grid_test_dask):
     """ Test triangulate_dask """
     grid_tri = sx.triangulate(grid_test_dask)
-    assert grid_tri.ds.dims['nSCHISM_hgrid_node'] == 2639
-    assert grid_tri.ds.dims['nSCHISM_hgrid_face'] == 4636
+    assert grid_tri.nMesh2_node == 2639
+    assert grid_tri.nMesh2_face == 4636
 
 
 def test_read_hgrid_gr3():
@@ -55,8 +55,8 @@ def test_read_hgrid_gr3():
     p_cur = Path(__file__).parent.absolute()
     grid = sx.read_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
     assert grid.mesh_type == 'ugrid'
-    assert grid.ds.dims['nSCHISM_hgrid_node'] == 112
-    assert grid.ds.dims['nSCHISM_hgrid_face'] == 135
+    assert grid.nMesh2_node == 112
+    assert grid.nMesh2_face == 135
     # assert grid.ds.dims['nSCHISM_hgrid_edge'] == 10416
     # assert grid.ds.dims['nSCHISM_hgrid_max_face_nodes'] == 3
     # assert grid.ds.dims['nSCHISM_hgrid_max_edge_nodes'] == 2
@@ -87,12 +87,14 @@ def test_subset(grid_test_dask):
     polygon = Polygon(([55830, -10401], [56001, -10401],
                       [56001, -10240], [55830, -10240]))
     grid_sub = grid_test_dask.subset(polygon)
-    assert grid_sub.ds.dims['nSCHISM_hgrid_face'] == 6
-    assert grid_sub.ds.SCHISM_hgrid_face_nodes.values[0, -1] == \
-        grid_sub.ds.SCHISM_hgrid_face_nodes.attrs['_FillValue']
+    assert grid_sub.nMesh2_face == 6
+    assert grid_sub.Mesh2_face_nodes.values[0, -1] == \
+        grid_sub.Mesh2_face_nodes.attrs['_FillValue']
 
 
 def test_depth_average(grid_test_dask):
-    da = grid_test_dask.depth_average('salinity')
-    assert da.sel(nSCHISM_hgrid_node=492).values[0] == pytest.approx(
+    ds = sx.Dataset(grid_test_dask._ds)
+    da = ds.depth_average('salinity')
+
+    assert da.sel(nMesh2_node=492).values[0] == pytest.approx(
         0.145977, abs=1e-6)

@@ -3,6 +3,7 @@
 `suxarray` is a module that extends the functionality of `uxarray` for the
 SCHISM grid.
 """
+from typing import Optional
 import numpy as np
 import pandas as pd
 from numba import njit
@@ -42,34 +43,75 @@ class Grid(ux.Grid):
         mesh_type: str, optional
             Specify the mesh file type, eg. exo, ugrid, shp, etc
         """
+        # Coerce the mesh name to Mesh2
+        dataset = self.coerce_mesh_name(dataset)
         # Add a topology dummy variable if it doesn't exist
         # The current SCHISM out2d does not have this variable.
         if get_topology_variable(dataset) is None:
             dataset = self.add_topology_variable(dataset)
         # Adjust the 1-based node indices to 0-based
-        if 'start_index' in dataset.SCHISM_hgrid_face_nodes.attrs:
-            start_index = dataset.SCHISM_hgrid_face_nodes.attrs['start_index']
+        # FIXME Hardwired the SCHISM grid name
+        if 'start_index' in dataset.Mesh2_face_nodes.attrs:
+            start_index = dataset.Mesh2_face_nodes.attrs['start_index']
             if start_index == 1:
-                original_attrs = dataset.SCHISM_hgrid_face_nodes.attrs
-                dataset.update({"SCHISM_hgrid_face_nodes":
-                                dataset.SCHISM_hgrid_face_nodes - 1})
-                dataset.SCHISM_hgrid_face_nodes.attrs.update(original_attrs)
-                dataset.SCHISM_hgrid_face_nodes.attrs['start_index'] = 0
-                fill_value = dataset.SCHISM_hgrid_face_nodes.attrs['_FillValue']
-                dataset.SCHISM_hgrid_face_nodes.attrs['_FillValue'] = \
+                original_attrs = dataset.Mesh2_face_nodes.attrs
+                dataset.update({"Mesh2_face_nodes":
+                                dataset.Mesh2_face_nodes - 1})
+                dataset.Mesh2_face_nodes.attrs.update(original_attrs)
+                dataset.Mesh2_face_nodes.attrs['start_index'] = 0
+                fill_value = dataset.Mesh2_face_nodes.attrs['_FillValue']
+                dataset.Mesh2_face_nodes.attrs['_FillValue'] = \
                     fill_value - 1
             elif start_index != 0:
                 raise ValueError("start_index must be 0 or 1")
         # Initialize the super class
         super().__init__(dataset, **kwargs)
-        # Add an optional edge node connectivity variable name
 
-    def __init_ds_var_names__(self):
-        super().__init_ds_var_names__()
-        self.ds_var_names['Mesh2_edge_nodes'] = 'SCHISM_hgrid_edge_nodes'
+    def __init_grid_var_names__(self):
+        super().__init_grid_var_names__()
+        # uxarray 2023.06 does not have this variable mapping.
+        self.grid_var_names['Mesh2_edge_nodes'] = 'Mesh2_edge_nodes'
+
+    def coerce_mesh_name(self, ds):
+        """Coerce the mesh name to Mesh2
+
+        As of uxarray 2023.06, it is better to use the default mesh name, Mesh2,
+        instead of a customized name. So, it is decide to use Mesh2 till this
+        issue is resolved in uxarary side.
+        """
+        da_topo = get_topology_variable(ds)
+        if da_topo is None:
+            raise ValueError("No mesh_topology variable found")
+        if da_topo.name == 'Mesh2':
+            return ds
+        name_org = da_topo.name
+        # Rename the topology metadata variable to Mesh2
+        ds = ds.rename_vars({name_org: 'Mesh2'})
+        da_topo = ds['Mesh2']
+        # if an attr value has the customized mesh name, replace it with Mesh2
+        for k in da_topo.attrs:
+            # If the value is str, replace it
+            if isinstance(da_topo.attrs[k], str):
+                da_topo.attrs[k] = da_topo.attrs[k].replace(name_org, 'Mesh2')
+        # Rename dimensions
+        # First, collect dimensions to rename
+        dims_to_rename = {k: k.replace(name_org, 'Mesh2')
+                          for k in ds.dims if name_org in k}
+        ds = ds.rename_dims(dims_to_rename)
+        # Rename coordinates
+        # First, collect coordinates to rename
+        coords_to_rename = {k: k.replace(name_org, 'Mesh2')
+                            for k in ds.coords if name_org in k}
+        ds = ds.rename(coords_to_rename)
+        # Rename variables
+        # First, collect variables to rename
+        vars_to_rename = {k: k.replace(name_org, 'Mesh2')
+                          for k in ds.data_vars if name_org in k}
+        ds = ds.rename(vars_to_rename)
+        return ds
 
     @staticmethod
-    def add_topology_variable(ds, varname="SCHISM_hgrid"):
+    def add_topology_variable(ds, varname="Mesh2"):
         """ Add a dummy mesh_topology variable to a SCHISM out2d dataset
 
         Parameters
@@ -82,9 +124,9 @@ class Grid(ux.Grid):
         ds = ds.assign({varname: 1})
         ds[varname].attrs['cf_role'] = 'mesh_topology'
         ds[varname].attrs['topology_dimension'] = 2
-        ds[varname].attrs['node_coordinates'] = "SCHISM_hgrid_node_x SCHISM_hgrid_node_y"
-        ds[varname].attrs['face_node_connectivity'] = "SCHISM_hgrid_face_nodes"
-        ds[varname].attrs['edge_node_connectivity'] = "SCHISM_hgrid_edge_nodes"
+        ds[varname].attrs['node_coordinates'] = "Mesh2_node_x Mesh2_node_y"
+        ds[varname].attrs['face_node_connectivity'] = "Mesh2_face_nodes"
+        ds[varname].attrs['edge_node_connectivity'] = "Mesh2_edge_nodes"
         ds[varname].attrs['Mesh2_layers'] = "zCoordinates"
         ds[varname].attrs['start_index'] = 0
 
@@ -105,10 +147,11 @@ class Grid(ux.Grid):
                 # Assuming the indices are positional
                 return Polygon(zip(node_x[ind], node_y[ind]))
 
+            # NOTE Assuming the second dimension of Mesh2_face_nodes is not safe.
             self._face_polygons = xr.apply_ufunc(create_polygon,
                                                  self.Mesh2_face_nodes,
                                                  input_core_dims=(
-                                                     (self.ds_var_names['nMaxMesh2_face_nodes'],),),
+                                                     (self.Mesh2_face_nodes.dims[1],),),
                                                  dask="parallelized",
                                                  output_dtypes=[object],
                                                  vectorize=True)
@@ -190,49 +233,53 @@ class Grid(ux.Grid):
         # If the two nodes in an edge are in the node_subset, then the edge
         # is in the subset
         # Select the edges that are in the subset
-        mesh2_edge_nodes = self.ds.SCHISM_hgrid_edge_nodes.values
+        mesh2_edge_nodes = self.Mesh2_edge_nodes.values
         edge_subset_mask = (np.isin(mesh2_edge_nodes[:, 0], node_subset) &
                             np.isin(mesh2_edge_nodes[:, 1], node_subset))
         edge_subset = mesh2_edge_nodes[edge_subset_mask, :]
 
-        # TODO Need to slice the edge variable as well.
-        ds = self.ds.sel(nSCHISM_hgrid_node=node_subset,
-                         nSCHISM_hgrid_face=elem_ilocs,
-                         nSCHISM_hgrid_edge=edge_subset_mask)
+        ds = self._ds.sel(nMesh2_node=node_subset,
+                          nMesh2_face=elem_ilocs,
+                          nMesh2_edge=edge_subset_mask)
+        # Rename dimensions
+        # XXX Continue to work, but this will be a problem again...
+        ds = ds.rename_dims(
+            {"nMesh2_node": "nMesh2_node_subset"})
         new_face_nodes = renumber_nodes(face_subset.values, fill_value)
         da_new_face_nodes = xr.DataArray(new_face_nodes,
-                                         dims=('nSCHISM_hgrid_face',
-                                               'nMaxSCHISM_hgrid_face_nodes'),
+                                         dims=('nMesh2_face',
+                                               'nMaxMesh2_face_nodes'),
                                          attrs=self.Mesh2_face_nodes.attrs)
         # Update the face-nodes connectivity variable
-        ds.update({self.ds_var_names['Mesh2_face_nodes']: da_new_face_nodes})
+        ds.update({self.grid_var_names['Mesh2_face_nodes']: da_new_face_nodes})
 
         # Update the edge-nodes connectivity variable
         # Replace node indices in the edge connectivity with a node index
         # dictionary
-        node_dict = dict(zip(node_subset, np.arange(1, len(node_subset) + 1)),
+        node_dict = dict(zip(node_subset, np.arange(len(node_subset))),
                          dtype=np.int32)
         node_dict[-1] = -1
         new_edge_nodes = np.array([[node_dict[n] for n in edge]
                                    for edge in edge_subset],
                                   dtype=np.int32)
         da_new_edge_nodes = xr.DataArray(new_edge_nodes,
-                                         dims=('nSCHISM_hgrid_edge', 'two'),
-                                         attrs=self.ds.SCHISM_hgrid_edge_nodes.attrs)
-        ds.update({self.ds_var_names['Mesh2_edge_nodes']: da_new_edge_nodes})
+                                         dims=('nMesh2_edge', 'two'),
+                                         attrs=self.Mesh2_edge_nodes.attrs)
+        ds.update({self.grid_var_names['Mesh2_edge_nodes']: da_new_edge_nodes})
 
         # Add the original node numbers as a variable
-        da_original_node_indices = xr.DataArray(node_subset + 1,
-                                                dims=('nSCHISM_hgrid_node',),
+        da_original_node_indices = xr.DataArray(node_subset,
+                                                dims=('nMesh2_node',),
                                                 attrs={'long_name': 'Original node indices',
-                                                       'start_index': 1})
-        ds['SCHISM_hgrid_node_indices'] = da_original_node_indices
+                                                       'start_index': 0})
+        ds['Mesh2_node_indices'] = da_original_node_indices
 
         # Add a history
         ds.attrs['history'] = "Subset by suxarray"
 
         # Remove the face dimension
-        ds = ds.drop_vars("Mesh2_face_dimension")
+        if "Mesh2_face_dimension" in ds:
+            ds = ds.drop_vars("Mesh2_face_dimension")
 
         # Create a suxarray grid and return
         grid_subset = Grid(ds)
@@ -257,18 +304,81 @@ class Grid(ux.Grid):
             self.Mesh2_face_nodes,
             self.Mesh2_face_dimension,
             exclude_dims=set(
-                ["nSCHISM_hgrid_node",
-                 "nSCHISM_hgrid_face",
-                 "nMaxSCHISM_hgrid_face_nodes"]
+                ["nMesh2_node",
+                 "nMesh2_face",
+                 "nMaxMesh2_face_nodes"]
             ),
             input_core_dims=[
-                ["nSCHISM_hgrid_node", ],
-                ["nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"],
+                ["nMesh2_node", ],
+                ["nMesh2_face", "nMaxMesh2_face_nodes"],
                 ["nMesh2_face",]],
             output_core_dims=[["nMesh2_face",]],
             dask="parallelized"
         )
         return da_result
+
+
+    def read_vgrid(self, path_vgrid):
+        """ Read a SCHISM vgrid file """
+        with open(path_vgrid, "r") as f:
+            ivcor = int(f.readline().strip())
+            if ivcor != 1:
+                raise NotImplementedError("Only ivcor=1 is implemented")
+            if ivcor == 1:
+                nvrt = int(f.readline().strip())
+        if ivcor == 1:
+            n_nodes = self.Mesh2_node_x.size
+            widths = np.full(n_nodes, 11, dtype=np.int32)
+            widths[0] = 10
+            df_nvrt = pd.read_fwf(path_vgrid,
+                                  header=None, skiprows=2, nrows=1,
+                                  widths=widths,
+                                  dtype=np.int32)
+            self.ds['nvrt'] = xr.DataArray(df_nvrt.values.squeeze(),
+                                           dims=('nMesh2_node',))
+            widths = np.full(n_nodes + 1, 15, dtype=np.int32)
+            widths[0] = 10
+            df_vgrid = pd.read_fwf(path_vgrid,
+                                   header=None, skiprows=3, nrows=nvrt,
+                                   widths=[10] + [15] * n_nodes,
+                                   na_values=-9.,
+                                   dtype=np.float32)
+            self.ds['vgrid'] = xr.DataArray(df_vgrid.iloc[:, 1:].values + 1.0,
+                                            dims=('nSCHISM_vgrid_layers',
+                                                  'nMesh2_node',))
+
+    def compute_face_areas(self):
+        """ Compute face areas
+
+        Though uxarray has its own area calculation, it does not work at the
+        moment for a hybrid grid. This function builds Shapley polygons for
+        faces (elements) and calculates their areas using Shaplely, overriding
+        the uxarray's area calculation.
+
+        Returns
+        -------
+        da_face_areas : xr.DataArray
+            Face areas
+        """
+        ret = xr.apply_ufunc(lambda v: np.vectorize(lambda x: x.area)(
+            v), self.face_polygons, dask="parallelized", output_dtypes=float)
+        return ret
+
+    # Add plot methods
+    hvplot = UncachedAccessor(suxarray.hvplot.PlotMethods)
+
+
+class Dataset(ux.UxDataset):
+    def __init__(self,
+                 *args,
+                 suxgrid: Grid = None,
+                 source_datasets: Optional[str] = None,
+                 **kwargs):
+        self._suxgrid = suxgrid
+        super().__init__(*args,
+                         uxgrid=suxgrid,
+                         source_datasets=source_datasets,
+                         **kwargs)
 
     def depth_average(self, var_name):
         """ Calculate depth-average of a variable
@@ -294,10 +404,10 @@ class Grid(ux.Grid):
             return np.trapz(v, x=zs, axis=-1) / depth
 
         da_da = xr.apply_ufunc(_depth_average,
-                               self.ds[var_name],
-                               self.ds.zCoordinates,
-                               self.ds.bottom_index_node - 1,
-                               self.ds.dryFlagNode,
+                               self[var_name],
+                               self.zCoordinates,
+                               self.bottom_index_node - 1,
+                               self.dryFlagNode,
                                input_core_dims=[["nSCHISM_vgrid_layers",],
                                                 ["nSCHISM_vgrid_layers",],
                                                 [],
@@ -306,54 +416,6 @@ class Grid(ux.Grid):
                                output_dtypes=[float])
         return da_da
 
-    def read_vgrid(self, path_vgrid):
-        """ Read a SCHISM vgrid file """
-        with open(path_vgrid, "r") as f:
-            ivcor = int(f.readline().strip())
-            if ivcor != 1:
-                raise NotImplementedError("Only ivcor=1 is implemented")
-            if ivcor == 1:
-                nvrt = int(f.readline().strip())
-        if ivcor == 1:
-            n_nodes = self.Mesh2_node_x.size
-            widths = np.full(n_nodes, 11, dtype=np.int32)
-            widths[0] = 10
-            df_nvrt = pd.read_fwf(path_vgrid,
-                                  header=None, skiprows=2, nrows=1,
-                                  widths=widths,
-                                  dtype=np.int32)
-            self.ds['nvrt'] = xr.DataArray(df_nvrt.values.squeeze(),
-                                           dims=('nSCHISM_hgrid_node',))
-            widths = np.full(n_nodes + 1, 15, dtype=np.int32)
-            widths[0] = 10
-            df_vgrid = pd.read_fwf(path_vgrid,
-                                   header=None, skiprows=3, nrows=nvrt,
-                                   widths=[10] + [15] * n_nodes,
-                                   na_values=-9.,
-                                   dtype=np.float32)
-            self.ds['vgrid'] = xr.DataArray(df_vgrid.iloc[:, 1:].values + 1.0,
-                                            dims=('nSCHISM_vgrid_layers',
-                                                  'nSCHISM_hgrid_node',))
-
-    def compute_face_areas(self):
-        """ Compute face areas
-
-        Though uxarray has its own area calculation, it does not work at the
-        moment for a hybrid grid. This function builds Shapley polygons for
-        faces (elements) and calculates their areas using Shaplely, overriding
-        the uxarray's area calculation.
-
-        Returns
-        -------
-        da_face_areas : xr.DataArray
-            Face areas
-        """
-        ret = xr.apply_ufunc(lambda v: np.vectorize(lambda x: x.area)(
-            v), self.face_polygons, dask="parallelized", output_dtypes=float)
-        return ret
-
-    # Add plot methods
-    hvplot = UncachedAccessor(suxarray.hvplot.PlotMethods)
 
 # TODO separate utility functions to another file
 def renumber_nodes(a, fill_value: int = None):
@@ -379,7 +441,7 @@ def _renumber(a):
     return dense.reshape(a.shape)
 
 
-def get_topology_variable(dataset):
+def get_topology_variable(dataset: xr.Dataset) -> Optional[str]:
     """ Get the topology xarray.DataArray
 
     Parameters
@@ -419,7 +481,7 @@ def triangulate(grid):
     grid : Grid
         Triangulated grid
     """
-    mesh_name = grid.ds_var_names['Mesh2']
+    mesh_name = grid.grid_var_names['Mesh2']
     face_nodes = grid.Mesh2_face_nodes
 
     n_face = grid.nMesh2_face
@@ -459,11 +521,13 @@ def triangulate(grid):
         np.arange(n_face), repeats=n_triangle_per_row)
 
     # Copy the data from the original grid
-    ds_tri = grid.ds.copy()
+    ds_tri = grid._ds.copy()
     # Drop the original face_nodes variable
-    varnames_to_drop = ["SCHISM_hgrid_face_nodes", "dryFlagElement",
-                        "SCHISM_hgrid_face_x", "SCHISM_hgrid_face_y",
-                        "Mesh2_face_dimension"]
+    # TODO dryFlagElement is needed to be updated not dropped, but let's drop
+    # it for now.
+    varnames_to_drop = [f"{mesh_name}_face_nodes", "dryFlagElement",
+                        f"{mesh_name}_face_x", f"{mesh_name}_face_y",
+                        "Mesh2_face_dimension", "nNodes_per_face"]
     for varname in varnames_to_drop:
         if varname in ds_tri:
             ds_tri = ds_tri.drop_vars(varname)
@@ -517,7 +581,7 @@ def read_hgrid_gr3(path_hgrid):
     """ Read SCHISM hgrid.gr3 file and return suxarray grid """
     # read the header
     with open(path_hgrid, "r") as f:
-        first_line = f.readline()
+        f.readline()
         n_faces, n_nodes = [int(x) for x in f.readline().strip().split()[:2]]
     # Read the node section. Read only up to the fourth column
     df_nodes = pd.read_csv(path_hgrid, skiprows=2, header=None,
@@ -529,19 +593,19 @@ def read_hgrid_gr3(path_hgrid):
     # TODO Read boundary information, if any
     # Create suxarray grid
     ds = xr.Dataset()
-    ds['SCHISM_hgrid_node_x'] = xr.DataArray(
-        data=df_nodes[1].values, dims="nSCHISM_hgrid_node")
-    ds['SCHISM_hgrid_node_y'] = xr.DataArray(
-        data=df_nodes[2].values, dims="nSCHISM_hgrid_node")
+    ds['Mesh2_node_x'] = xr.DataArray(
+        data=df_nodes[1].values, dims="nMesh2_node")
+    ds['Mesh2_node_y'] = xr.DataArray(
+        data=df_nodes[2].values, dims="nMesh2_node")
     # Replace NaN with -1
     df_faces = df_faces.fillna(0)
-    ds['SCHISM_hgrid_face_nodes'] = xr.DataArray(
+    ds['Mesh2_face_nodes'] = xr.DataArray(
         data=df_faces[[2, 3, 4, 5]].astype(int).values - 1,
-        dims=("nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"),
+        dims=("nMesh2_face", "nMaxMesh2_face_nodes"),
         attrs={"start_index": 0,
                "cf_role": "face_node_connectivity",
                "_FillValue": -1}
-        )
+    )
     ds['depth'] = df_nodes[3].values
     # Add dummy mesh_topology variable
     ds = Grid.add_topology_variable(ds)
