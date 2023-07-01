@@ -21,6 +21,7 @@ def grid_test_dask():
     ds_salinity = xr.open_mfdataset(
         path_var, mask_and_scale=False, data_vars='minimal')
     ds = xr.merge([ds_out2d, ds_zcoord, ds_salinity])
+    ds = sx.coerce_mesh_name(ds)
     grid = sx.Grid(ds)
     yield grid
     ds.close()

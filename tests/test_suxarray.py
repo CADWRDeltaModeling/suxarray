@@ -13,6 +13,7 @@ def test_suxarray_init_with_out2d():
     p_cur = Path(__file__).parent.absolute()
     ds = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"),
                          mask_and_scale=False)
+    ds = sx.coerce_mesh_name(ds)
     grid = sx.Grid(ds)
     assert grid.mesh_type == 'ugrid'
     assert grid.nMesh2_node == 2639

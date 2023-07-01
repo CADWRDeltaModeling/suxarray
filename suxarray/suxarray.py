@@ -43,12 +43,6 @@ class Grid(ux.Grid):
         mesh_type: str, optional
             Specify the mesh file type, eg. exo, ugrid, shp, etc
         """
-        # Coerce the mesh name to Mesh2
-        dataset = self.coerce_mesh_name(dataset)
-        # Add a topology dummy variable if it doesn't exist
-        # The current SCHISM out2d does not have this variable.
-        if get_topology_variable(dataset) is None:
-            dataset = self.add_topology_variable(dataset)
         # Adjust the 1-based node indices to 0-based
         # FIXME Hardwired the SCHISM grid name
         if 'start_index' in dataset.Mesh2_face_nodes.attrs:
@@ -71,66 +65,6 @@ class Grid(ux.Grid):
         super().__init_grid_var_names__()
         # uxarray 2023.06 does not have this variable mapping.
         self.grid_var_names['Mesh2_edge_nodes'] = 'Mesh2_edge_nodes'
-
-    def coerce_mesh_name(self, ds):
-        """Coerce the mesh name to Mesh2
-
-        As of uxarray 2023.06, it is better to use the default mesh name, Mesh2,
-        instead of a customized name. So, it is decide to use Mesh2 till this
-        issue is resolved in uxarary side.
-        """
-        da_topo = get_topology_variable(ds)
-        if da_topo is None:
-            raise ValueError("No mesh_topology variable found")
-        if da_topo.name == 'Mesh2':
-            return ds
-        name_org = da_topo.name
-        # Rename the topology metadata variable to Mesh2
-        ds = ds.rename_vars({name_org: 'Mesh2'})
-        da_topo = ds['Mesh2']
-        # if an attr value has the customized mesh name, replace it with Mesh2
-        for k in da_topo.attrs:
-            # If the value is str, replace it
-            if isinstance(da_topo.attrs[k], str):
-                da_topo.attrs[k] = da_topo.attrs[k].replace(name_org, 'Mesh2')
-        # Rename dimensions
-        # First, collect dimensions to rename
-        dims_to_rename = {k: k.replace(name_org, 'Mesh2')
-                          for k in ds.dims if name_org in k}
-        ds = ds.rename_dims(dims_to_rename)
-        # Rename coordinates
-        # First, collect coordinates to rename
-        coords_to_rename = {k: k.replace(name_org, 'Mesh2')
-                            for k in ds.coords if name_org in k}
-        ds = ds.rename(coords_to_rename)
-        # Rename variables
-        # First, collect variables to rename
-        vars_to_rename = {k: k.replace(name_org, 'Mesh2')
-                          for k in ds.data_vars if name_org in k}
-        ds = ds.rename(vars_to_rename)
-        return ds
-
-    @staticmethod
-    def add_topology_variable(ds, varname="Mesh2"):
-        """ Add a dummy mesh_topology variable to a SCHISM out2d dataset
-
-        Parameters
-        ----------
-        ds : xarray.Dataset, required
-            Input SCHISM out2d xarray.Dataset
-        varname : str, optional
-            Name of the dummy topology variable. Default is "Mesh2"
-        """
-        ds = ds.assign({varname: 1})
-        ds[varname].attrs['cf_role'] = 'mesh_topology'
-        ds[varname].attrs['topology_dimension'] = 2
-        ds[varname].attrs['node_coordinates'] = "Mesh2_node_x Mesh2_node_y"
-        ds[varname].attrs['face_node_connectivity'] = "Mesh2_face_nodes"
-        ds[varname].attrs['edge_node_connectivity'] = "Mesh2_edge_nodes"
-        ds[varname].attrs['Mesh2_layers'] = "zCoordinates"
-        ds[varname].attrs['start_index'] = 0
-
-        return ds
 
     @property
     def face_polygons(self):
@@ -278,45 +212,12 @@ class Grid(ux.Grid):
         ds.attrs['history'] = "Subset by suxarray"
 
         # Remove the face dimension
-        if "Mesh2_face_dimension" in ds:
-            ds = ds.drop_vars("Mesh2_face_dimension")
+        if "nNodes_per_face" in ds:
+            ds = ds.drop_vars("nNodes_per_face")
 
         # Create a suxarray grid and return
         grid_subset = Grid(ds)
         return grid_subset
-
-    def face_average(self, dataarray: xr.DataArray) -> xr.DataArray:
-        """Calculate face average of a variable
-
-        Parameters
-        ----------
-        dataarray: xr.DataArray, required
-            Input variable
-
-        Returns
-        -------
-        da : xr.DataArray
-            Face averaged variable
-        """
-        da_result = xr.apply_ufunc(
-            face_average,
-            dataarray.load(),
-            self.Mesh2_face_nodes,
-            self.Mesh2_face_dimension,
-            exclude_dims=set(
-                ["nMesh2_node",
-                 "nMesh2_face",
-                 "nMaxMesh2_face_nodes"]
-            ),
-            input_core_dims=[
-                ["nMesh2_node", ],
-                ["nMesh2_face", "nMaxMesh2_face_nodes"],
-                ["nMesh2_face",]],
-            output_core_dims=[["nMesh2_face",]],
-            dask="parallelized"
-        )
-        return da_result
-
 
     def read_vgrid(self, path_vgrid):
         """ Read a SCHISM vgrid file """
@@ -369,14 +270,16 @@ class Grid(ux.Grid):
 
 
 class Dataset(ux.UxDataset):
+    __slots__ = ("_sxgrid",)
+
     def __init__(self,
                  *args,
-                 suxgrid: Grid = None,
+                 sxgrid: Grid = None,
                  source_datasets: Optional[str] = None,
                  **kwargs):
-        self._suxgrid = suxgrid
+        self._sxgrid = sxgrid
         super().__init__(*args,
-                         uxgrid=suxgrid,
+                         uxgrid=sxgrid,
                          source_datasets=source_datasets,
                          **kwargs)
 
@@ -415,6 +318,106 @@ class Dataset(ux.UxDataset):
                                dask='parallelized',
                                output_dtypes=[float])
         return da_da
+
+    def face_average(self, dataarray: xr.DataArray) -> xr.DataArray:
+        """Calculate face average of a variable
+
+        Parameters
+        ----------
+        dataarray: xr.DataArray, required
+            Input variable
+
+        Returns
+        -------
+        da : xr.DataArray
+            Face averaged variable
+        """
+        da_result = xr.apply_ufunc(
+            face_average,
+            dataarray.load(),
+            self.uxgrid.Mesh2_face_nodes,
+            self.uxgrid.nNodes_per_face,
+            exclude_dims=set(
+                ["nMesh2_node",
+                 "nMesh2_face",
+                 "nMaxMesh2_face_nodes"]
+            ),
+            input_core_dims=[
+                ["nMesh2_node", ],
+                ["nMesh2_face", "nMaxMesh2_face_nodes"],
+                ["nMesh2_face", ]],
+            output_core_dims=[["nMesh2_face", ], ],
+            output_dtypes=[float],
+            dask_gufunc_kwargs={'output_sizes': {
+                "nMesh2_face": self.uxgrid.nMesh2_face}},
+            dask="parallelized"
+        )
+        return da_result
+
+    @property
+    def sxgrid(self):
+        return self._sxgrid
+
+
+def add_topology_variable(ds, varname="Mesh2"):
+    """ Add a dummy mesh_topology variable to a SCHISM out2d dataset
+
+    Parameters
+    ----------
+    ds : xarray.Dataset, required
+        Input SCHISM out2d xarray.Dataset
+    varname : str, optional
+        Name of the dummy topology variable. Default is "Mesh2"
+    """
+    ds = ds.assign({varname: 1})
+    ds[varname].attrs['cf_role'] = 'mesh_topology'
+    ds[varname].attrs['topology_dimension'] = 2
+    ds[varname].attrs['node_coordinates'] = "Mesh2_node_x Mesh2_node_y"
+    ds[varname].attrs['face_node_connectivity'] = "Mesh2_face_nodes"
+    ds[varname].attrs['edge_node_connectivity'] = "Mesh2_edge_nodes"
+    ds[varname].attrs['Mesh2_layers'] = "zCoordinates"
+    ds[varname].attrs['start_index'] = 0
+
+    return ds
+
+
+def coerce_mesh_name(ds):
+    """Coerce the mesh name to Mesh2
+
+    As of uxarray 2023.06, it is better to use the default mesh name, Mesh2,
+    instead of a customized name. So, it is decide to use Mesh2 till this
+    issue is resolved in uxarary side.
+    """
+    da_topo = get_topology_variable(ds)
+    if da_topo is None:
+        raise ValueError("No mesh_topology variable found")
+    if da_topo.name == 'Mesh2':
+        return ds
+    name_org = da_topo.name
+    # Rename the topology metadata variable to Mesh2
+    ds = ds.rename_vars({name_org: 'Mesh2'})
+    da_topo = ds['Mesh2']
+    # if an attr value has the customized mesh name, replace it with Mesh2
+    for k in da_topo.attrs:
+        # If the value is str, replace it
+        if isinstance(da_topo.attrs[k], str):
+            da_topo.attrs[k] = da_topo.attrs[k].replace(name_org, 'Mesh2')
+    # Rename dimensions
+    # First, collect dimensions to rename
+    dims_to_rename = {k: k.replace(name_org, 'Mesh2')
+                      for k in ds.dims if name_org in k}
+    ds = ds.rename_dims(dims_to_rename)
+    # Rename coordinates
+    # First, collect coordinates to rename
+    coords_to_rename = {k: k.replace(name_org, 'Mesh2')
+                        for k in ds.coords if name_org in k}
+    ds = ds.rename(coords_to_rename)
+    # Rename variables
+    # First, collect variables to rename
+    vars_to_rename = {k: k.replace(name_org, 'Mesh2')
+                      for k in ds.data_vars if name_org in k}
+    ds = ds.rename(vars_to_rename)
+    return ds
 
 
 # TODO separate utility functions to another file
@@ -527,7 +530,7 @@ def triangulate(grid):
     # it for now.
     varnames_to_drop = [f"{mesh_name}_face_nodes", "dryFlagElement",
                         f"{mesh_name}_face_x", f"{mesh_name}_face_y",
-                        "Mesh2_face_dimension", "nNodes_per_face"]
+                        "nNodes_per_face"]
     for varname in varnames_to_drop:
         if varname in ds_tri:
             ds_tri = ds_tri.drop_vars(varname)
@@ -546,17 +549,18 @@ def triangulate(grid):
     return grid_tri
 
 
-@njit
-def face_average(val, face_nodes, face_geometry):
+def face_average(val, face_nodes, n_nodes_per_face):
     """Calculate face average of a variable
 
     Calculate average of a variable at each face. No weighting is applied.
 
     Parameters
     ----------
+    val: ndarray, required
+        values to process. The last dimension must be for the nodes.
     face_nodes: ndarray, required
         Face-node connectivity array
-    face_geometry: ndarray, required
+    n_nodes_per_face: ndarray, required
         Number of nodes per face
 
     Returns
@@ -567,13 +571,12 @@ def face_average(val, face_nodes, face_geometry):
     n_face, _ = face_nodes.shape
 
     # set initial area of each face to 0
-    result = np.zeros(val.shape[:-1] + (n_face,))
+    result = np.zeros(val.shape[:-1] + (n_face, ))
 
-    for face_idx, max_nodes in enumerate(face_geometry):
+    for face_idx, max_nodes in enumerate(n_nodes_per_face):
         avg = (val[..., face_nodes[face_idx, 0:max_nodes]].sum(axis=-1)
                / max_nodes)
         result[..., face_idx] = avg
-
     return result
 
 
@@ -608,7 +611,8 @@ def read_hgrid_gr3(path_hgrid):
     )
     ds['depth'] = df_nodes[3].values
     # Add dummy mesh_topology variable
-    ds = Grid.add_topology_variable(ds)
+    ds = add_topology_variable(ds)
+    ds = coerce_mesh_name(ds)
 
     grid = Grid(ds, islation=False, mesh_type="ugrid")
     return grid
