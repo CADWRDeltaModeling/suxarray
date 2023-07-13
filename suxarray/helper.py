@@ -20,7 +20,7 @@ def read_schism_nc(path_nc, **kwargs):
     """
     # Read the data
     ds = xr.open_mfdataset(
-       path_nc, data_vars="minimal", mask_and_scale=False, **kwargs
+       path_nc, data_vars="minimal", **kwargs
     )
 
     # Add extra information to make dataset CF compliant for convenience
