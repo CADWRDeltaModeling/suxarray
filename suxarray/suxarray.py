@@ -304,7 +304,9 @@ class Dataset(ux.UxDataset):
             # Mask nan values
             v = np.ma.masked_invalid(v, copy=False)
             zs = np.ma.masked_invalid(zs, copy=False)
-            return np.trapz(v, x=zs, axis=-1) / depth
+            result = np.trapz(v, x=zs, axis=-1) / depth
+            result[dry == 1.] = np.nan
+            return result
 
         da_da = xr.apply_ufunc(_depth_average,
                                self[var_name],
