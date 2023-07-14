@@ -336,7 +336,7 @@ class Dataset(ux.UxDataset):
         """
         da_result = xr.apply_ufunc(
             face_average,
-            dataarray.load(),
+            dataarray,
             self.uxgrid.Mesh2_face_nodes,
             self.uxgrid.nNodes_per_face,
             exclude_dims=set(
