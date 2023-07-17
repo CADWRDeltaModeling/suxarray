@@ -134,7 +134,7 @@ class Grid(ux.Grid):
         point = Point(x, y)
         return self.elem_strtree.query(point, predicate=predicate)
 
-    def subset(self, Polygon: Polygon):
+    def subset(self, polygon: Polygon):
         """ Subset the grid to the given polygon
 
         This function is copied and modified from xugrid topology_subset.
@@ -148,7 +148,7 @@ class Grid(ux.Grid):
         subset: suxarray.Grid
         Parameters
         ----------
-        Polygon : shapely.Polygon, required
+        polygon : shapely.Polygon, required
             Polygon to subset the grid to
 
         Returns
@@ -157,7 +157,7 @@ class Grid(ux.Grid):
             Subgrid
         """
         # Find the elements that intersect the polygon
-        elem_ilocs = self.elem_strtree.query(Polygon, predicate='contains')
+        elem_ilocs = self.elem_strtree.query(polygon, predicate='contains')
 
         face_subset = self.Mesh2_face_nodes[elem_ilocs, :]
         fill_value = self.Mesh2_face_nodes.attrs['_FillValue']
