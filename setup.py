@@ -32,6 +32,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11'
     ],
     description="suxarray is an extension of uxarray for SCHISM.",
     entry_points={

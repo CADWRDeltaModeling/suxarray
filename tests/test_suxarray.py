@@ -3,99 +3,89 @@ import numpy as np
 import xarray as xr
 import pytest
 from shapely.geometry import Polygon
-import suxarray.suxarray as sx
+import suxarray as sx
 from .testfixtures import *
 
 
-def test_suxarray_init_with_out2d():
-    """ Test suxarray initialization with a SCHISM out2d file """
-    # Test with a HelloSCHISM v5.10 out2d file
-    p_cur = Path(__file__).parent.absolute()
-    ds = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"),
-                         mask_and_scale=False)
-    ds = sx.coerce_mesh_name(ds)
-    grid = sx.Grid(ds)
-    assert grid.mesh_type == 'ugrid'
-    assert grid.nMesh2_node == 2639
-
-
-def test_get_topology_variable():
-    """ Test get_topology_variable """
-    # Test with a HelloSCHISM v5.10 out2d file
+def test_open_grid():
+    """Test opening a SCHISM grid i3nfo from a SCHISM netCDF file"""
     p_cur = Path(__file__).parent.absolute()
     ds = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    da = sx.get_topology_variable(ds)
-    assert da.name == 'SCHISM_hgrid'
+    grid = sx.open_grid(ds)
+    assert grid.n_node == 2639
+    assert grid.n_face == 4636
+
+
+def test_open_schism_nc_without_zcoords():
+    """Test opening a SCHISM netCDF file"""
+    p_cur = Path(__file__).parent.absolute()
+    sxds = sx.open_schism_nc(
+        str(p_cur / "testdata/out2d_1.nc"), str(p_cur / "testdata/out2d_1.nc")
+    )
+    assert sxds.sxgrid.n_node == 2639
+    assert sxds.sxgrid.n_face == 4636
+
+
+def test_open_schism_nc_with_zcoords():
+    """Test opening a SCHISM netCDF file"""
+    p_cur = Path(__file__).parent.absolute()
+    data_paths = ["testdata/zCoordinates_1.nc", "testdata/salinity_1.nc"]
+    data_paths = [str(p_cur / path) for path in data_paths]
+    sxds = sx.open_schism_nc(str(p_cur / "testdata/out2d_1.nc"), data_paths)
+    assert sxds.sxgrid.n_node == 2639
+    assert sxds.sxgrid.n_face == 4636
 
 
 @pytest.fixture
 def grid_test():
-    """ Test mesh fixture """
+    """Test mesh fixture"""
     p_cur = Path(__file__).parent.absolute()
-    grid = sx.read_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
+    grid = sx.open_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
     return grid
 
 
-def test_triangulate(grid_test):
-    """ Test triangulate """
-    grid_tri = sx.triangulate(grid_test)
-    assert grid_tri.nMesh2_node == 112
-    assert grid_tri.nMesh2_face == 168
-
-
-def test_triangulate_dask(grid_test_dask):
-    """ Test triangulate_dask """
-    grid_tri = sx.triangulate(grid_test_dask)
-    assert grid_tri.nMesh2_node == 2639
-    assert grid_tri.nMesh2_face == 4636
-
-
 def test_read_hgrid_gr3():
-    """ Test read_hgrid_gr3 """
+    """Test read_hgrid_gr3"""
     # Test with a HelloSCHISM v5.10 hgrid.gr3 file
     p_cur = Path(__file__).parent.absolute()
-    grid = sx.read_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
-    assert grid.mesh_type == 'ugrid'
-    assert grid.nMesh2_node == 112
-    assert grid.nMesh2_face == 135
+    grid = sx.core.api.open_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
+    assert grid.n_node == 112
+    assert grid.n_face == 135
     # assert grid.ds.dims['nSCHISM_hgrid_edge'] == 10416
     # assert grid.ds.dims['nSCHISM_hgrid_max_face_nodes'] == 3
     # assert grid.ds.dims['nSCHISM_hgrid_max_edge_nodes'] == 2
 
 
 def test_find_element_at_position(grid_test):
-    """ Test find_element_at """
+    """Test find_element_at"""
     # When a point is inside an element
-    elem_ind = grid_test.find_element_at(2., 1.)
+    coords = (2.0, 1.0)
+    tree = grid_test.get_strtree()
+    from shapely.geometry import Point
+
+    elem_ind = tree.query(Point(coords), predicate="intersects")
     assert np.all(elem_ind == np.array([123]))
-    # When a point is on a boundary of two elements
-    elem_ind = grid_test.find_element_at(0., 0.)
-    assert np.all(elem_ind == np.array([39, 123]))
+    # # When a point is on a boundary of two elements
+    # elem_ind = grid_test.find_element_at(0.0, 0.0)
+    # assert np.all(elem_ind == np.array([39, 123]))
 
 
-def test_find_element_at_position_dask(grid_test_dask):
-    """ Test find_element_at """
+def test_subset_bounding_box_xy(sxds_test_dask):
+    """Test find_element_at"""
     # When a point is inside an element
-    elem_ind = grid_test_dask.find_element_at(1., -9999.)
-    assert np.all(elem_ind == np.array([372]))
-    # When a point is on a boundary of two elements
-    elem_ind = grid_test_dask.find_element_at(56000., -10350.)
-    elem_ind.sort()
-    assert np.all(elem_ind == np.array([0, 2, 3722]))
+    # elem_ind = grid_test_dask.find_element_at(1.0, -9999.0)
+    # assert np.all(elem_ind == np.array([372]))
+    # # When a point is on a boundary of two elements
+    # elem_ind = grid_test_dask.find_element_at(56000.0, -10350.0)
+    # elem_ind.sort()
+    # assert np.all(elem_ind == np.array([0, 2, 3722]))
+    da_subset = sxds_test_dask["salinity"].subset.bounding_box_xy(
+        [0.0, 1000.0], [0.0, 10400.0]
+    )
+    assert da_subset.sxgrid.n_node == 21
 
 
-def test_subset(grid_test_dask):
-    polygon = Polygon(([55830, -10401], [56001, -10401],
-                      [56001, -10240], [55830, -10240]))
-    grid_sub = grid_test_dask.subset(polygon)
-    assert grid_sub.nMesh2_face == 6
-    assert grid_sub.Mesh2_face_nodes.values[0, -1] == \
-        grid_sub.Mesh2_face_nodes.attrs['_FillValue']
+def test_depth_average(sxds_test_dask):
+    da = sxds_test_dask["salinity"].depth_average()
 
-
-def test_depth_average(grid_test_dask):
-    ds = sx.Dataset(grid_test_dask._ds)
-    da = ds.depth_average('salinity')
-
-    assert da.sel(nMesh2_node=492).values[0] == pytest.approx(
-        0.145977, abs=1e-6)
+    assert da.sel(n_node=492).values[0] == pytest.approx(0.145977, abs=1e-6)

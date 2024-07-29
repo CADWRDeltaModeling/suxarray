@@ -1,7 +1,18 @@
 """Top-level package for suxarray."""
 
 __author__ = """California Department of Water Resources"""
-__email__ = 'knam@water.ca.gov'
-__version__ = '0.1.3'
+__email__ = "knam@water.ca.gov"
+__version__ = "0.2.0"
 
-from .suxarray import *
+from .core.api import open_grid, open_schism_nc, open_hgrid_gr3
+from .core.dataset import SxDataset
+from .core.dataarray import SxDataArray
+from .grid import Grid
+
+__all__ = (
+    "SxDataset",
+    "SxDataArray",
+    "open_hgrid_gr3",
+    "open_grid" "open_schism_nc",
+    "Grid",
+)
