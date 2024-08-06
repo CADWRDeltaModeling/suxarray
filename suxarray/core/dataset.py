@@ -16,7 +16,6 @@ from shapely.strtree import STRtree
 import uxarray as ux
 from suxarray.grid import Grid
 from suxarray.core.dataarray import SxDataArray
-import suxarray.hvplot
 
 
 class SxDataset(ux.UxDataset):
@@ -42,7 +41,6 @@ class SxDataset(ux.UxDataset):
             value = SxDataArray._from_uxdataarray(value)
 
         return value
-
 
     # def face_average(self, dataarray: xr.DataArray) -> xr.DataArray:
     #     """Calculate face average of a variable
