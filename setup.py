@@ -10,7 +10,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['uxarray>=2023.4.1',
+requirements = ['uxarray=2024.07.1',
                 'netcdf4', 'shapely>=2.0',
                 'Click>=7.0']
 
