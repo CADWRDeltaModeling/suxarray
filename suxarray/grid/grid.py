@@ -99,15 +99,15 @@ class Grid(ux.Grid):
         if coordinates == "nodes":
             self._node_strtree = STRTree(self, elements="nodes")
             return self._node_strtree
-        elif coordinates == "face":
+        elif coordinates == "faces":
             self._face_strtree = STRTree(self, elements="faces")
             return self._face_strtree
-        elif coordinates == "edge centers":
-            self._edge_strtree = self.sxgrid.get_strtree(coordinates="edge centers")
+        elif coordinates == "edges":
+            self._edge_strtree = STRTree(coordinates="edges")
             return self._edge_strtree
         else:
             raise ValueError(
-                f"Coordinates must be one of 'nodes', 'face centers', or 'edge centers'."
+                f"Coordinates must be one of 'nodes', 'faces', or 'edges'."
             )
 
     def isel(self, **dim_kwargs):
@@ -130,6 +130,31 @@ class Grid(ux.Grid):
         >> grid.isel(n_face = [1,2,3,4])
         """
         return self._from_uxgrid(super().isel(**dim_kwargs))
+
+    def intersect(
+        self,
+        geometry: shapely.geometry.BaseGeometry,
+        element: Optional[str] = "faces",
+        **kwargs,
+    ):
+        """Find intersecting elements with a Shapely geometry
+
+        Parameters
+        ----------
+        geometry: shapely.geometry.Geometry
+        element: str, optional
+
+        Returns
+        -------
+        int
+            Indices of intersecting elements
+        """
+        if element == "faces":
+            strtree = self.get_strtree(coordinates=element)
+            face_ilocs = strtree.query(geometry, predicate="intersects")
+            return face_ilocs
+        else:
+            raise ValueError("TODO")
 
     # def read_vgrid(self, path_vgrid):
     #     """Read a SCHISM vgrid file"""

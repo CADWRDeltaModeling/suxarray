@@ -48,7 +48,7 @@ class STRTree:
             # If the spatial tree is not built yet, build it
             p_x = self._grid.node_x
             p_y = self._grid.node_y
-            fill_value = self._grid.attrs["_FillValue"]
+            fill_value = self._grid.face_node_connectivity.attrs["_FillValue"]
 
             def create_polygon(node_indices):
                 # The node indices are 1-based

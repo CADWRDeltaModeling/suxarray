@@ -36,14 +36,6 @@ def test_open_schism_nc_with_zcoords():
     assert sxds.sxgrid.n_face == 4636
 
 
-@pytest.fixture
-def grid_test():
-    """Test mesh fixture"""
-    p_cur = Path(__file__).parent.absolute()
-    grid = sx.open_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
-    return grid
-
-
 def test_read_hgrid_gr3():
     """Test read_hgrid_gr3"""
     # Test with a HelloSCHISM v5.10 hgrid.gr3 file
@@ -51,13 +43,10 @@ def test_read_hgrid_gr3():
     grid = sx.core.api.open_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
     assert grid.n_node == 112
     assert grid.n_face == 135
-    # assert grid.ds.dims['nSCHISM_hgrid_edge'] == 10416
-    # assert grid.ds.dims['nSCHISM_hgrid_max_face_nodes'] == 3
-    # assert grid.ds.dims['nSCHISM_hgrid_max_edge_nodes'] == 2
 
 
 def test_find_element_at_position(grid_test):
-    """Test find_element_at"""
+    """Test find_element_at_position"""
     # When a point is inside an element
     coords = (2.0, 1.0)
     tree = grid_test.get_strtree()
@@ -65,20 +54,24 @@ def test_find_element_at_position(grid_test):
 
     elem_ind = tree.query(Point(coords), predicate="intersects")
     assert np.all(elem_ind == np.array([123]))
-    # # When a point is on a boundary of two elements
-    # elem_ind = grid_test.find_element_at(0.0, 0.0)
-    # assert np.all(elem_ind == np.array([39, 123]))
+
+    elem_ind = grid_test.intersect(Point(coords))
+    assert np.all(elem_ind == np.array([123]))
+
+    # When a point is on a boundary of two elements
+    elem_ind = grid_test.intersect(Point([0.0, 0.0]))
+    assert np.all(elem_ind == np.array([39, 123]))
 
 
-def test_subset_bounding_box_xy(sxds_test_dask):
+def test_subset_bounding_polygon(sxds_test_dask):
+    """Test subsetting dataarray with a polygon"""
+    polygon = Polygon([(0.0, 0.0), (1000.0, 0.0), (1000.0, 10400.0), (0.0, 10400.0)])
+    da_subset = sxds_test_dask["salinity"].subset.bounding_polygon(polygon)
+    assert da_subset.sxgrid.n_node == 21
+
+
+def test_subset_bounding_box(sxds_test_dask):
     """Test find_element_at"""
-    # When a point is inside an element
-    # elem_ind = grid_test_dask.find_element_at(1.0, -9999.0)
-    # assert np.all(elem_ind == np.array([372]))
-    # # When a point is on a boundary of two elements
-    # elem_ind = grid_test_dask.find_element_at(56000.0, -10350.0)
-    # elem_ind.sort()
-    # assert np.all(elem_ind == np.array([0, 2, 3722]))
     da_subset = sxds_test_dask["salinity"].subset.bounding_box_xy(
         [0.0, 1000.0], [0.0, 10400.0]
     )

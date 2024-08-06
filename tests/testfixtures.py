@@ -5,6 +5,14 @@ import suxarray as sx
 
 
 @pytest.fixture
+def grid_test() -> sx.Grid:
+    """Test mesh fixture"""
+    p_cur = Path(__file__).parent.absolute()
+    grid = sx.open_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
+    return grid
+
+
+@pytest.fixture
 def sxds_test_dask():
     """Test out2d_dask fixture"""
     p_cur = Path(__file__).parent.absolute()
