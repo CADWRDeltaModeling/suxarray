@@ -80,5 +80,12 @@ def test_subset_bounding_box(sxds_test_dask):
 
 def test_depth_average(sxds_test_dask):
     da = sxds_test_dask["salinity"].depth_average()
-
     assert da.sel(n_node=492).values[0] == pytest.approx(0.145977, abs=1e-6)
+
+
+def test_slice_and_depth_average(sxds_test_dask):
+    polygon = Polygon([(0.0, 0.0), (1000.0, 0.0), (1000.0, 10400.0), (0.0, 10400.0)])
+    da_subset = sxds_test_dask["salinity"].subset.bounding_polygon(polygon)
+    da_da = da_subset.depth_average()
+    # Node 492 is now 1
+    assert da_da.sel(n_node=1).values[0] == pytest.approx(0.145977, abs=1e-6)

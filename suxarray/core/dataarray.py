@@ -11,13 +11,21 @@ from ..subset import DataArraySubsetAccessor
 
 
 class SxDataArray(uxarray.UxDataArray):
-    __slots__ = ()
+    __slots__ = ("_sxgrid",)
+
+    def __init__(self, *args, sxgrid: Grid = None, **kwargs):
+        self._sxgrid = None
+        if sxgrid is not None and not isinstance(sxgrid, Grid):
+            raise RuntimeError("sxgrid must be a Grid object")
+        else:
+            self._sxgrid = sxgrid
+        super().__init__(*args, uxgrid=sxgrid, **kwargs)
 
     subset = UncachedAccessor(DataArraySubsetAccessor)
 
     @property
     def sxgrid(self) -> Grid:
-        return self.uxgrid
+        return self._sxgrid
 
     def _slice_from_grid(self, grid: Grid) -> SxDataArray:
         """Slice the data array based on the grid object
@@ -32,17 +40,14 @@ class SxDataArray(uxarray.UxDataArray):
         SxDataArray
             Sliced data array
         """
-        return self._from_uxdataarray(super()._slice_from_grid(grid))
-
-    @classmethod
-    def _from_uxdataarray(cls, dataarray: uxarray.UxDataArray):
-        dataarray.__class__ = cls
-        return dataarray
+        return SxDataArray(super()._slice_from_grid(grid), sxgrid=grid)
 
     def depth_average(self) -> SxDataArray:
         """Calculate depth-average of a variable
 
         This may need to be moved to a separate file.
+        TODO: Currently this assumes nodal values. Need to support other `element`.
+        TODO: Maybe this can be moved to another file.
 
         Parameters
         ----------
@@ -88,4 +93,4 @@ class SxDataArray(uxarray.UxDataArray):
             dask="parallelized",
             output_dtypes=[float],
         )
-        return da_da
+        return SxDataArray(da_da, sxgrid=self.sxgrid)

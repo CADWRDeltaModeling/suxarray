@@ -28,7 +28,6 @@ class SxDataset(ux.UxDataset):
         source_datasets: Optional[str] = None,
         **kwargs,
     ):
-        self._sxgrid = None
         self._sxgrid = sxgrid
         super().__init__(
             *args, uxgrid=sxgrid, source_datasets=source_datasets, **kwargs
@@ -38,7 +37,7 @@ class SxDataset(ux.UxDataset):
         value = super().__getitem__(key)
 
         if isinstance(value, ux.UxDataArray):
-            value = SxDataArray._from_uxdataarray(value)
+            value = SxDataArray(value, sxgrid=self.sxgrid)
 
         return value
 

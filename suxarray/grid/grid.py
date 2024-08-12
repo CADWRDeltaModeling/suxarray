@@ -129,7 +129,15 @@ class Grid(ux.Grid):
         >> grid = ux.open_grid(grid_path)
         >> grid.isel(n_face = [1,2,3,4])
         """
-        return self._from_uxgrid(super().isel(**dim_kwargs))
+        # First, slice the grid information
+        grid_new = self._from_uxgrid(super().isel(**dim_kwargs))
+
+        # Need to subset (or slice) zCoords and other variables
+        grid_new._z_coords = self.z_coords.isel(
+            n_node=grid_new._ds["subgrid_node_indices"]
+        )
+
+        return grid_new
 
     def intersect(
         self,

@@ -106,3 +106,6 @@ ENV/
 !.vscode/launch.json
 *.code-workspace
 .idea/
+
+# Other development items
+dev/
