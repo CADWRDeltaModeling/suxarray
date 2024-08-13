@@ -95,15 +95,18 @@ class Grid(ux.Grid):
     def z_coords(self) -> xr.Dataset:
         return self._z_coords
 
-    def get_strtree(self, coordinates: Optional[str] = "nodes"):
-        if coordinates == "nodes":
-            self._node_strtree = STRTree(self, elements="nodes")
+    def get_strtree(self, elements: Optional[str] = "nodes"):
+        if elements == "nodes":
+            if self._node_strtree is None:
+                self._node_strtree = STRTree(self, elements="nodes")
             return self._node_strtree
-        elif coordinates == "faces":
-            self._face_strtree = STRTree(self, elements="faces")
+        elif elements == "faces":
+            if self._face_strtree is None:
+                self._face_strtree = STRTree(self, elements="faces")
             return self._face_strtree
-        elif coordinates == "edges":
-            self._edge_strtree = STRTree(coordinates="edges")
+        elif elements == "edges":
+            if self._edge_strtree is None:
+                self._edge_strtree = STRTree(self, elements="edges")
             return self._edge_strtree
         else:
             raise ValueError(
@@ -158,7 +161,7 @@ class Grid(ux.Grid):
             Indices of intersecting elements
         """
         if element == "faces":
-            strtree = self.get_strtree(coordinates=element)
+            strtree = self.get_strtree(elements=element)
             face_ilocs = strtree.query(geometry, predicate="intersects")
             return face_ilocs
         else:

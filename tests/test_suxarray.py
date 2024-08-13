@@ -49,18 +49,26 @@ def test_find_element_at_position(grid_test):
     """Test find_element_at_position"""
     # When a point is inside an element
     coords = (2.0, 1.0)
-    tree = grid_test.get_strtree()
-    from shapely.geometry import Point
+    tree = grid_test.get_strtree(elements="faces")
 
     elem_ind = tree.query(Point(coords), predicate="intersects")
-    assert np.all(elem_ind == np.array([123]))
+    assert elem_ind[0] == 123
 
     elem_ind = grid_test.intersect(Point(coords))
-    assert np.all(elem_ind == np.array([123]))
+    assert elem_ind[0] == 123
 
     # When a point is on a boundary of two elements
     elem_ind = grid_test.intersect(Point([0.0, 0.0]))
     assert np.all(elem_ind == np.array([39, 123]))
+
+
+def test_find_nearest_node(grid_test):
+    """Test find_nearest_node"""
+    # When a point is inside an element
+    coords = (2.0, 1.0)
+    tree = grid_test.get_strtree(elements="nodes")
+    node_ind = tree.nearest(Point(coords))
+    assert node_ind == 52
 
 
 def test_subset_bounding_polygon(sxds_test_dask):

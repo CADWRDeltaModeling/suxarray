@@ -70,3 +70,6 @@ class STRTree:
 
     def query(self, geometry, predicate=None, distance=None):
         return self._strtree.query(geometry, predicate=predicate, distance=distance)
+
+    def nearest(self, geometry):
+        return self._strtree.nearest(geometry)
