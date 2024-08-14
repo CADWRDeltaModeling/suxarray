@@ -10,7 +10,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['uxarray=2024.07.1',
+requirements = ['uxarray==2024.07.1',
                 'netcdf4', 'shapely>=2.0',
                 'Click>=7.0']
 
@@ -22,7 +22,7 @@ test_requirements = requirements + ['pytest>=3', ] + extra_requirements['vtk']
 setup(
     author="California Department of Water Resources",
     author_email='knam@water.ca.gov',
-    python_requires='>=3.8,<3.11',
+    python_requires='>=3.8,<3.12',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
