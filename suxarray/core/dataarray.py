@@ -61,13 +61,13 @@ class SxDataArray(uxarray.UxDataArray):
             Depth averaged variable
         """
 
-        bottom_index_node = self.sxgrid.z_coords.bottom_index_node
-        dry_flag_node = self.sxgrid.z_coords.dryFlagNode
+        bottom_index_node = self.sxgrid.zcoords.bottom_index_node
+        dry_flag_node = self.sxgrid.zcoords.dryFlagNode
 
         da_da = xr.apply_ufunc(
             _depth_average,
             self,
-            self.sxgrid.z_coords["zCoordinates"],
+            self.sxgrid.zcoords["zCoordinates"],
             bottom_index_node - 1,
             dry_flag_node,
             input_core_dims=[

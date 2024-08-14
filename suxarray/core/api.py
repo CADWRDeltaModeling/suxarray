@@ -141,8 +141,8 @@ def open_schism_nc(
 
     ds_out2d = xr.open_mfdataset(out2d_filename, mask_and_scale=False)
     if "zCoordinates" in ds.variables:
-        da_z_coords = ds.zCoordinates
-        ds_zcoords = da_z_coords.to_dataset()
+        da_zcoords = ds.zCoordinates
+        ds_zcoords = da_zcoords.to_dataset()
         vars_zcoords = ["bottom_index_node", "dryFlagNode"]
         for var in vars_zcoords:
             if var in ds_out2d:

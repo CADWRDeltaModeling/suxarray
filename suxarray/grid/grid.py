@@ -46,7 +46,7 @@ class Grid(ux.Grid):
         self._node_points = None
         self._node_strtree = None
         self._edge_strtree = None
-        self._z_coords = ds_zcoords
+        self._zcoords = ds_zcoords
 
         if isinstance(grid_obj, ux.Grid):
             super().__init__(
@@ -92,8 +92,8 @@ class Grid(ux.Grid):
         return grid
 
     @property
-    def z_coords(self) -> xr.Dataset:
-        return self._z_coords
+    def zcoords(self) -> xr.Dataset:
+        return self._zcoords
 
     def get_strtree(self, elements: Optional[str] = "nodes"):
         if elements == "nodes":
@@ -136,7 +136,7 @@ class Grid(ux.Grid):
         grid_new = self._from_uxgrid(super().isel(**dim_kwargs))
 
         # Need to subset (or slice) zCoords and other variables
-        grid_new._z_coords = self.z_coords.isel(
+        grid_new._zcoords = self.zcoords.isel(
             n_node=grid_new._ds["subgrid_node_indices"]
         )
 
