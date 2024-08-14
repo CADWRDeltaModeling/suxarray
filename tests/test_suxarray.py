@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 import pytest
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 import suxarray as sx
 from .testfixtures import *
 

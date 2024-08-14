@@ -6,8 +6,10 @@ import numpy as np
 import xarray as xr
 from xarray.core.utils import UncachedAccessor
 import uxarray
-from ..grid import Grid
-from ..subset import DataArraySubsetAccessor
+from shapely.geometry import Point
+from suxarray.grid import Grid
+from suxarray.subset import DataArraySubsetAccessor
+from suxarray.utils.computing import _depth_average
 
 
 class SxDataArray(uxarray.UxDataArray):
@@ -58,18 +60,6 @@ class SxDataArray(uxarray.UxDataArray):
         da : SxDataArray
             Depth averaged variable
         """
-
-        def _depth_average(v, zs, k, dry):
-            # Select the values with the last index from the bottom index
-            # array, k
-            z_bottom = np.take_along_axis(zs, k.reshape((1, -1, 1)), axis=-1)
-            depth = zs[..., -1] - z_bottom.squeeze(axis=-1)
-            # Mask nan values
-            v = np.ma.masked_invalid(v, copy=False)
-            zs = np.ma.masked_invalid(zs, copy=False)
-            result = np.trapz(v, x=zs, axis=-1) / depth
-            result[dry == 1.0] = np.nan
-            return result
 
         bottom_index_node = self.sxgrid.z_coords.bottom_index_node
         dry_flag_node = self.sxgrid.z_coords.dryFlagNode
