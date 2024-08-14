@@ -38,7 +38,7 @@ class GridSubsetAccessor(uxarray.subset.GridSubsetAccessor):
             predicate = "intersects"
 
         if element == "nodes":
-            strtree = self.sxgrid.get_strtree(coordinates=element)
+            strtree = self.sxgrid.get_strtree(elements=element)
             node_ilocs = strtree.query(polygon, predicate=predicate)
             return self.sxgrid.isel(n_node=node_ilocs)
         else:
