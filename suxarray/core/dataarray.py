@@ -13,36 +13,26 @@ from suxarray.utils.computing import _depth_average
 
 
 class SxDataArray(uxarray.UxDataArray):
-    __slots__ = ("_sxgrid",)
+    __slots__ = ()
 
     def __init__(self, *args, sxgrid: Grid = None, **kwargs):
-        self._sxgrid = None
         if sxgrid is not None and not isinstance(sxgrid, Grid):
             raise RuntimeError("sxgrid must be a Grid object")
-        else:
-            self._sxgrid = sxgrid
+
         super().__init__(*args, uxgrid=sxgrid, **kwargs)
 
     subset = UncachedAccessor(DataArraySubsetAccessor)
 
     @property
     def sxgrid(self) -> Grid:
-        return self._sxgrid
+        return self.uxgrid
 
-    def _slice_from_grid(self, grid: Grid) -> SxDataArray:
-        """Slice the data array based on the grid object
+    def isel(self, ignore_grid=False, *args, **kwargs):
+        da_new = super().isel(ignore_grid=ignore_grid, *args, **kwargs)
+        if not ignore_grid:
+            da_new.uxgrid = da_new.uxgrid.sgrid_isel(**kwargs)
+        return da_new
 
-        Parameters
-        ----------
-        grid : Grid
-            Grid object
-
-        Returns
-        -------
-        SxDataArray
-            Sliced data array
-        """
-        return SxDataArray(super()._slice_from_grid(grid), sxgrid=grid)
 
     def depth_average(self) -> SxDataArray:
         """Calculate depth-average of a variable
@@ -61,13 +51,14 @@ class SxDataArray(uxarray.UxDataArray):
             Depth averaged variable
         """
 
-        bottom_index_node = self.sxgrid.zcoords.bottom_index_node
-        dry_flag_node = self.sxgrid.zcoords.dryFlagNode
+        bottom_index_node = self.sxgrid.sgrid_info.bottom_index_node
+        dry_flag_node = self.sxgrid.sgrid_info.dryFlagNode
+        zcoords = self.sxgrid.sgrid_info.zCoordinates
 
         da_da = xr.apply_ufunc(
             _depth_average,
             self,
-            self.sxgrid.zcoords["zCoordinates"],
+            zcoords,
             bottom_index_node - 1,
             dry_flag_node,
             input_core_dims=[

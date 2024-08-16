@@ -72,7 +72,7 @@ def open_grid(
     grid_filename_or_obj: Union[
         str, os.PathLike, xr.Dataset, np.ndarray, list, tuple, dict
     ],
-    ds_zcoords: xr.Dataset = None,
+    ds_sgrid_info: xr.Dataset = None,
     **kwargs: Dict[str, Any],
 ) -> Grid:
     """Open SCHISM grid file and return a suxarray Grid object
@@ -81,8 +81,8 @@ def open_grid(
     ----------
     grid_filename_or_obj : str, os.PathLike, xr.Dataset, np.ndarray, list, tuple, dict
         The path to the SCHISM grid file or a dataset object
-    ds_zcoords : xr.Dataset, optional
-        z-coordinate data object
+    ds_sgrid_info : xr.Dataset, optional
+        Extra SCHISM grid information such as z-coordinate data
 
     Returns
     -------
@@ -92,7 +92,7 @@ def open_grid(
     if isinstance(grid_filename_or_obj, xr.Dataset):
         # construct a grid from a dataset file
         grid_filename_or_obj = _transform_coordinates(grid_filename_or_obj)
-        sxgrid = Grid.from_dataset(grid_filename_or_obj, ds_zcoords=ds_zcoords)
+        sxgrid = Grid.from_dataset(grid_filename_or_obj, ds_sgrid_info=ds_sgrid_info)
 
     elif isinstance(grid_filename_or_obj, dict):
         # unpack the dictionary and construct a grid from topology
@@ -139,17 +139,17 @@ def open_schism_nc(
     else:
         ds = xr.open_dataset(data_filename)
 
-    ds_out2d = xr.open_mfdataset(out2d_filename, mask_and_scale=False)
-    if "zCoordinates" in ds.variables:
-        da_zcoords = ds.zCoordinates
-        ds_zcoords = da_zcoords.to_dataset()
-        vars_zcoords = ["bottom_index_node", "dryFlagNode"]
-        for var in vars_zcoords:
-            if var in ds_out2d:
-                ds_zcoords[var] = ds_out2d[var]
-            else:
-                warn(f"Variable {var} not found in zCoordinates file.")
-        sxgrid = open_grid(ds_out2d, ds_zcoords)
+    ds_out2d = xr.open_mfdataset(out2d_filename, mask_and_scale=False, parallel=True)
+
+    # Take SCHISM grid variables for the uxgrid
+    from suxarray.constants import SCHISM_GRID_VARIABLES
+
+    ds_sgrid_info = xr.Dataset()
+    for var in SCHISM_GRID_VARIABLES:
+        if var in ds.variables:
+            ds_sgrid_info[var] = ds[var]
+    if ds_sgrid_info:
+        sxgrid = open_grid(ds_out2d, ds_sgrid_info)
     else:
         sxgrid = open_grid(ds_out2d)
 

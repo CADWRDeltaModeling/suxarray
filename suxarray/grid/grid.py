@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import Optional, Union
-import pandas as pd
 import xarray as xr
 import uxarray as ux
 from xarray.core.utils import UncachedAccessor
@@ -21,7 +20,7 @@ class Grid(ux.Grid):
     def __init__(
         self,
         grid_obj: Union[xr.Dataset, ux.Grid],
-        ds_zcoords: Optional[xr.Dataset] = None,
+        ds_sgrid_info: Optional[xr.Dataset] = None,
         source_grid_spec: str = "UGRID",
         source_dims_dict: Optional[dict] = {},
         **kwargs,
@@ -31,6 +30,9 @@ class Grid(ux.Grid):
         Parameters
         ----------
         grid_odj : xarray.Dataset or uxarray.Grid
+            Grid dataset
+        ds_sgrid_info : xarray.Dataset, optional
+            SCHISM grid information dataset
 
         Other Parameters
         ----------------
@@ -46,7 +48,7 @@ class Grid(ux.Grid):
         self._node_points = None
         self._node_strtree = None
         self._edge_strtree = None
-        self._zcoords = ds_zcoords
+        self._sgrid_info = ds_sgrid_info
 
         if isinstance(grid_obj, ux.Grid):
             super().__init__(
@@ -67,7 +69,7 @@ class Grid(ux.Grid):
 
     @classmethod
     def from_dataset(
-        cls, ds_out2d: xr.Dataset, ds_zcoords: Optional[xr.Dataset] = None, **kwargs
+        cls, ds_out2d: xr.Dataset, ds_sgrid_info: Optional[xr.Dataset] = None, **kwargs
     ):
         """Create a Grid object from a SCHISM output 2D dataset and a z-coordinate dataset
 
@@ -75,25 +77,49 @@ class Grid(ux.Grid):
         ----------
         ds_out2d : xr.Dataset
             SCHISM output 2D dataset
-        ds_zcoords : xr.Dataset
-            z-coordinate dataset
+        ds_sgrid_info : xr.Dataset, optional
+            Extra SCHISM grid information
 
         Returns
         -------
         Grid
         """
         source_grid_spec = "UGRID"
-        grid_ds, source_dims_dict, ds_zcoords = _read_schism_out2d(ds_out2d, ds_zcoords)
-        return cls(grid_ds, ds_zcoords, source_grid_spec, source_dims_dict)
-
-    @classmethod
-    def _from_uxgrid(cls, grid: ux.Grid):
-        grid.__class__ = cls
-        return grid
+        grid_ds, source_dims_dict, ds_sgrid_info = _read_schism_out2d(
+            ds_out2d, ds_sgrid_info
+        )
+        return cls(grid_ds, ds_sgrid_info, source_grid_spec, source_dims_dict)
 
     @property
-    def zcoords(self) -> xr.Dataset:
-        return self._zcoords
+    def sgrid_info(self) -> xr.Dataset:
+        return self._sgrid_info
+
+    @sgrid_info.setter
+    def sgrid_info(self, sgrid_info: xr.Dataset):
+        self._sgrid_info = sgrid_info
+
+    def isel(self, **dim_kwargs):
+        # Because uxarray Grid calls external methods, isel below will not return
+        # Suxarray Grid object. It needs to be cast.
+        grid_new = super().isel(**dim_kwargs)
+        sgrid_new = Grid(grid_new, ds_sgrid_info=self.sgrid_info)
+        sgrid_new = sgrid_new.sgrid_isel(**dim_kwargs)
+        return sgrid_new
+
+    def sgrid_isel(self, **kwargs):
+        from uxarray.constants import GRID_DIMS
+
+        kwargs_no_grid_dim = {k: v for k, v in kwargs.items() if k not in GRID_DIMS}
+        if kwargs_no_grid_dim:
+            sgrid_info = self.sgrid_info.copy().isel(kwargs_no_grid_dim)
+        else:
+            sgrid_info = self.sgrid_info.copy()
+
+        # Need to subset (or slice) sgrid_info and other variables
+        if "subgrid_node_indices" in self._ds:
+            sgrid_info = sgrid_info.isel(n_node=self._ds["subgrid_node_indices"])
+
+        return Grid(self, ds_sgrid_info=sgrid_info)
 
     def get_strtree(self, elements: Optional[str] = "nodes"):
         if elements == "nodes":
@@ -112,35 +138,6 @@ class Grid(ux.Grid):
             raise ValueError(
                 f"Coordinates must be one of 'nodes', 'faces', or 'edges'."
             )
-
-    def isel(self, **dim_kwargs):
-        """Indexes an unstructured grid along a given dimension (``n_node``,
-        ``n_edge``, or ``n_face``) and returns a new grid.
-
-        Currently only supports inclusive selection, meaning that for cases where node or edge indices are provided,
-        any face that contains that element is included in the resulting subset. This means that additional elements
-        beyond those that were initially provided in the indices will be included. Support for more methods, such as
-        exclusive and clipped indexing is in the works.
-
-        Parameters
-        **dims_kwargs: kwargs
-            Dimension to index, one of ['n_node', 'n_edge', 'n_face']
-
-
-        Example
-        -------`
-        >> grid = ux.open_grid(grid_path)
-        >> grid.isel(n_face = [1,2,3,4])
-        """
-        # First, slice the grid information
-        grid_new = self._from_uxgrid(super().isel(**dim_kwargs))
-
-        # Need to subset (or slice) zCoords and other variables
-        grid_new._zcoords = self.zcoords.isel(
-            n_node=grid_new._ds["subgrid_node_indices"]
-        )
-
-        return grid_new
 
     def intersect(
         self,

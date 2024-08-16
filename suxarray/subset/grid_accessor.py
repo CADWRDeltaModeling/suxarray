@@ -11,8 +11,12 @@ if TYPE_CHECKING:
 
 class GridSubsetAccessor(uxarray.subset.GridSubsetAccessor):
     def __init__(self, sxgrid: Grid) -> None:
-        self.sxgrid = sxgrid
+        self._sxgrid = sxgrid
         super().__init__(sxgrid)
+
+    @property
+    def sxgrid(self) -> Grid:
+        return self._sxgrid
 
     def bounding_polygon(
         self,

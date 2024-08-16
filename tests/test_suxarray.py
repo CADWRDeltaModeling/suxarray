@@ -75,7 +75,7 @@ def test_subset_bounding_polygon(sxds_test_dask):
     """Test subsetting dataarray with a polygon"""
     polygon = Polygon([(0.0, 0.0), (1000.0, 0.0), (1000.0, 10400.0), (0.0, 10400.0)])
     da_subset = sxds_test_dask["salinity"].subset.bounding_polygon(polygon)
-    assert da_subset.sxgrid.n_node == 21
+    assert da_subset.uxgrid.n_node == 21
 
 
 def test_subset_bounding_box(sxds_test_dask):
@@ -83,7 +83,16 @@ def test_subset_bounding_box(sxds_test_dask):
     da_subset = sxds_test_dask["salinity"].subset.bounding_box_xy(
         [0.0, 1000.0], [0.0, 10400.0]
     )
-    assert da_subset.sxgrid.n_node == 21
+    assert da_subset.uxgrid.n_node == 21
+
+
+def test_isel(sxds_test_dask):
+    da = sxds_test_dask["salinity"].isel(time=range(2))
+    assert da.uxgrid.n_node == 2639
+    assert da.uxgrid.sgrid_info.time.size == 2
+    # Slice again
+    da = sxds_test_dask["salinity"].isel(time=range(4))
+    assert da.uxgrid.sgrid_info.time.size == 4
 
 
 def test_depth_average(sxds_test_dask):

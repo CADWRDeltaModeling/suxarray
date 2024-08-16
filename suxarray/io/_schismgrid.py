@@ -1,8 +1,9 @@
+from __future__ import annotations
 import uxarray.conventions.ugrid as ugrid
 from uxarray.io._ugrid import _standardize_connectivity
 
 
-def _read_schism_out2d(ds_out2d, ds_zcoords=None):
+def _read_schism_out2d(ds_out2d, ds_sgrid_info=None):
     """Read grid information from a SCHISM out2d NetCDF file
 
     This function is copied and modified from uxarray.io._ugrid._read_ugrid.
@@ -59,7 +60,7 @@ def _read_schism_out2d(ds_out2d, ds_zcoords=None):
     else:
         dim_ori = ds_out2d["node_x"].dims[0]
         dim_dict[dim_ori] = ugrid.NODE_DIM
-        if ds_zcoords is not None and dim_ori in ds_zcoords.dims:
+        if ds_sgrid_info is not None and dim_ori in ds_sgrid_info.dims:
             dim_dict_zcoords[dim_ori] = ugrid.NODE_DIM
 
     if "face_dimension" in ds_out2d["grid_topology"]:
@@ -67,7 +68,7 @@ def _read_schism_out2d(ds_out2d, ds_zcoords=None):
     else:
         dim_ori = ds_out2d["face_node_connectivity"].dims[0]
         dim_dict[dim_ori] = ugrid.FACE_DIM
-        if ds_zcoords is not None and dim_ori in ds_zcoords.dims:
+        if ds_sgrid_info is not None and dim_ori in ds_sgrid_info.dims:
             dim_dict_zcoords[dim_ori] = ugrid.FACE_DIM
 
     if "edge_dimension" in ds_out2d["grid_topology"]:
@@ -77,13 +78,13 @@ def _read_schism_out2d(ds_out2d, ds_zcoords=None):
         if "edge_x" in ds_out2d:
             dim_ori = ds_out2d["edge_x"].dims[0]
             dim_dict[dim_ori] = ugrid.EDGE_DIM
-            if ds_zcoords is not None and dim_ori in ds_zcoords.dims:
+            if ds_sgrid_info is not None and dim_ori in ds_sgrid_info.dims:
                 dim_dict_zcoords[dim_ori] = ugrid.EDGE_DIM
 
     dim_dict[ds_out2d["face_node_connectivity"].dims[1]] = ugrid.N_MAX_FACE_NODES_DIM
 
     ds_out2d = ds_out2d.swap_dims(dim_dict)
-    if ds_zcoords is not None:
-        ds_zcoords = ds_zcoords.swap_dims(dim_dict_zcoords)
+    if ds_sgrid_info is not None:
+        ds_sgrid_info = ds_sgrid_info.swap_dims(dim_dict_zcoords)
 
-    return ds_out2d, dim_dict, ds_zcoords
+    return ds_out2d, dim_dict, ds_sgrid_info

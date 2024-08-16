@@ -8,8 +8,11 @@ import suxarray as sx
 
 class DataArraySubsetAccessor(uxarray.subset.DataArraySubsetAccessor):
     def __init__(self, sxda) -> None:
-        self.sxda = sxda
         super().__init__(sxda)
+
+    @property
+    def sxda(self) -> sx.SxDataArray:
+        return self.uxda
 
     def __repr__(self):
         prefix = "<suxarray.SuxDataArray.subset>\n"
@@ -55,7 +58,7 @@ class DataArraySubsetAccessor(uxarray.subset.DataArraySubsetAccessor):
         grid = self.sxda.sxgrid.subset.bounding_polygon(
             polygon, element=element, predicate=predicate
         )
-        return self.sxda._slice_from_grid(grid)
+        return sx.SxDataArray(self.sxda._slice_from_grid(grid), sxgrid=grid)
 
     def bounding_box_xy(
         self,

@@ -2,7 +2,7 @@ import numpy as np
 import numba as nb
 
 
-@nb.njit(nopython=True, cache=True)
+@nb.njit(cache=True)
 def _depth_average(v, zs, k, dry):
     """Calculate the depth average of a variable
 
