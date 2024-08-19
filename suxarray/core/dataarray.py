@@ -29,7 +29,7 @@ class SxDataArray(uxarray.UxDataArray):
 
     def isel(self, ignore_grid=False, *args, **kwargs):
         da_new = super().isel(ignore_grid=ignore_grid, *args, **kwargs)
-        if not ignore_grid:
+        if not ignore_grid and self.uxgrid.sgrid_info is not None:
             da_new.uxgrid = da_new.uxgrid.sgrid_isel(**kwargs)
         return da_new
 

@@ -103,7 +103,8 @@ class Grid(ux.Grid):
         # Suxarray Grid object. It needs to be cast.
         grid_new = super().isel(**dim_kwargs)
         sgrid_new = Grid(grid_new, ds_sgrid_info=self.sgrid_info)
-        sgrid_new = sgrid_new.sgrid_isel(**dim_kwargs)
+        if self.sgrid_info is not None:
+            sgrid_new = sgrid_new.sgrid_isel(**dim_kwargs)
         return sgrid_new
 
     def sgrid_isel(self, **kwargs):
@@ -115,9 +116,9 @@ class Grid(ux.Grid):
         else:
             sgrid_info = self.sgrid_info.copy()
 
-        # Need to subset (or slice) sgrid_info and other variables
+        # Need to subset (or slice) sgrid_info
         if "subgrid_node_indices" in self._ds:
-            sgrid_info = sgrid_info.isel(n_node=self._ds["subgrid_node_indices"])
+            sgrid_info = sgrid_info.isel(n_node=self._ds["subgrid_node_indices"].values)
 
         return Grid(self, ds_sgrid_info=sgrid_info)
 

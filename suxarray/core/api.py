@@ -118,7 +118,7 @@ def open_grid(
 
 
 def open_schism_nc(
-    out2d_filename: Union[str, os.PathLike],
+    out2d_filename: Union[str, os.PathLike, xr.Dataset],
     data_filename: Union[str, os.PathLike, xr.Dataset],
 ) -> SxDataset:
     """Open SCHISM NetCDF output files and return a suxarray Dataset
@@ -139,7 +139,14 @@ def open_schism_nc(
     else:
         ds = xr.open_dataset(data_filename)
 
-    ds_out2d = xr.open_mfdataset(out2d_filename, mask_and_scale=False, parallel=True)
+    if isinstance(out2d_filename, xr.Dataset):
+        ds_out2d = out2d_filename
+    elif isinstance(out2d_filename, list):
+        ds_out2d = xr.open_mfdataset(
+            out2d_filename, mask_and_scale=False, parallel=True
+        )
+    else:
+        ds_out2d = xr.open_dataset(out2d_filename, mask_and_scale=False)
 
     # Take SCHISM grid variables for the uxgrid
     from suxarray.constants import SCHISM_GRID_VARIABLES
@@ -148,10 +155,12 @@ def open_schism_nc(
     for var in SCHISM_GRID_VARIABLES:
         if var in ds.variables:
             ds_sgrid_info[var] = ds[var]
+        if var in ds_out2d.variables:
+            ds_sgrid_info[var] = ds_out2d[var]
     if ds_sgrid_info:
         sxgrid = open_grid(ds_out2d, ds_sgrid_info)
     else:
-        sxgrid = open_grid(ds_out2d)
+        sxgrid = open_grid(ds_out2d.isel(time=0))
 
     # Remove the spatial coordinates to make uxarray happy
     for var in ds.variables:

@@ -8,6 +8,8 @@ def _read_schism_out2d(ds_out2d, ds_sgrid_info=None):
 
     This function is copied and modified from uxarray.io._ugrid._read_ugrid.
     It may need to be updated when the original function is updated."""
+    if "time" in ds_out2d.dims:
+        ds_out2d = ds_out2d.drop_dims("time")
     grid_topology_name = list(ds_out2d.filter_by_attrs(cf_role="mesh_topology").keys())[
         0
     ]

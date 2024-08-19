@@ -58,7 +58,17 @@ class DataArraySubsetAccessor(uxarray.subset.DataArraySubsetAccessor):
         grid = self.sxda.sxgrid.subset.bounding_polygon(
             polygon, element=element, predicate=predicate
         )
-        return sx.SxDataArray(self.sxda._slice_from_grid(grid), sxgrid=grid)
+        uxda_subset = self.sxda._slice_from_grid(grid)
+        sxda_subest = sx.SxDataArray(uxda_subset, sxgrid=grid)
+        # Rename the used subgrid indices
+        sxda_subest.sxgrid._ds = sxda_subest.sxgrid._ds.rename(
+            {
+                "subgrid_node_indices": "original_node_indices",
+                "subgrid_face_indices": "original_face_indices",
+                "subgrid_edge_indices": "original_edge_indices",
+            }
+        )
+        return sxda_subest
 
     def bounding_box_xy(
         self,
