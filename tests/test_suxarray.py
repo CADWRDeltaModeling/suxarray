@@ -7,40 +7,34 @@ import suxarray as sx
 from .testfixtures import *
 
 
-def test_open_grid():
+def test_read_grid():
     """Test opening a SCHISM grid i3nfo from a SCHISM netCDF file"""
     p_cur = Path(__file__).parent.absolute()
-    ds = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    grid = sx.open_grid(ds)
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    grid = sx.read_grid(ds_out2d, ds_zcoords)
     assert grid.n_node == 2639
     assert grid.n_face == 4636
 
 
-def test_open_schism_nc_without_zcoords():
+def test_read_schism_nc():
     """Test opening a SCHISM netCDF file"""
     p_cur = Path(__file__).parent.absolute()
-    sxds = sx.open_schism_nc(
-        str(p_cur / "testdata/out2d_1.nc"), str(p_cur / "testdata/out2d_1.nc")
-    )
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    grid = sx.read_grid(ds_out2d, ds_zcoords)
+    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"))
+    sxds = sx.read_schism_nc(grid, ds_data)
     assert sxds.sxgrid.n_node == 2639
     assert sxds.sxgrid.n_face == 4636
-
-
-def test_open_schism_nc_with_zcoords():
-    """Test opening a SCHISM netCDF file"""
-    p_cur = Path(__file__).parent.absolute()
-    data_paths = ["testdata/zCoordinates_1.nc", "testdata/salinity_1.nc"]
-    data_paths = [str(p_cur / path) for path in data_paths]
-    sxds = sx.open_schism_nc(str(p_cur / "testdata/out2d_1.nc"), data_paths)
-    assert sxds.sxgrid.n_node == 2639
-    assert sxds.sxgrid.n_face == 4636
+    assert sxds.time.size == 72
 
 
 def test_read_hgrid_gr3():
     """Test read_hgrid_gr3"""
     # Test with a HelloSCHISM v5.10 hgrid.gr3 file
     p_cur = Path(__file__).parent.absolute()
-    grid = sx.core.api.open_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
+    grid = sx.open_hgrid_gr3(str(p_cur / "testdata/testmesh.gr3"))
     assert grid.n_node == 112
     assert grid.n_face == 135
 
@@ -106,3 +100,9 @@ def test_slice_and_depth_average(sxds_test_dask):
     da_da = da_subset.depth_average()
     # Node 492 is now 1
     assert da_da.sel(n_node=1).values[0] == pytest.approx(0.145977, abs=1e-6)
+
+
+# def test_interpolate_xy(sxds_test_dask):
+#     da = sxds_test_dask["salinity"]
+#     da.interpolate_xy(1.0, 1.0)
+#     assert True

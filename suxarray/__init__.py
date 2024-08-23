@@ -4,15 +4,17 @@ __author__ = """California Department of Water Resources"""
 __email__ = "knam@water.ca.gov"
 __version__ = "0.2.0"
 
-from .core.api import open_grid, open_schism_nc, open_hgrid_gr3
+from .core.api import read_grid, read_schism_nc
 from .core.dataset import SxDataset
 from .core.dataarray import SxDataArray
 from .grid import Grid
+from .io._schismgrid import open_hgrid_gr3
 
 __all__ = (
     "SxDataset",
     "SxDataArray",
     "open_hgrid_gr3",
-    "open_grid" "open_schism_nc",
+    "read_grid",
+    "read_schism_nc",
     "Grid",
 )

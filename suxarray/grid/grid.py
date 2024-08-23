@@ -3,7 +3,7 @@ from typing import Optional, Union
 import xarray as xr
 import uxarray as ux
 from xarray.core.utils import UncachedAccessor
-from suxarray.io._schismgrid import _read_schism_out2d
+from suxarray.io._schismgrid import _read_schism_grid
 from suxarray.subset import GridSubsetAccessor
 from suxarray.grid.neighbors import STRTree
 
@@ -69,7 +69,7 @@ class Grid(ux.Grid):
 
     @classmethod
     def from_dataset(
-        cls, ds_out2d: xr.Dataset, ds_sgrid_info: Optional[xr.Dataset] = None, **kwargs
+        cls, ds_out2d: xr.Dataset, ds_zcoords: xr.Dataset, **kwargs
     ):
         """Create a Grid object from a SCHISM output 2D dataset and a z-coordinate dataset
 
@@ -85,10 +85,10 @@ class Grid(ux.Grid):
         Grid
         """
         source_grid_spec = "UGRID"
-        grid_ds, source_dims_dict, ds_sgrid_info = _read_schism_out2d(
-            ds_out2d, ds_sgrid_info
+        ds_grid, ds_sgrid_info = _read_schism_grid(
+            ds_out2d, ds_zcoords
         )
-        return cls(grid_ds, ds_sgrid_info, source_grid_spec, source_dims_dict)
+        return cls(ds_grid, ds_sgrid_info, source_grid_spec)
 
     @property
     def sgrid_info(self) -> xr.Dataset:
