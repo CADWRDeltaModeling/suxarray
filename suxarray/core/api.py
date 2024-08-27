@@ -1,5 +1,7 @@
 from typing import Dict, Union, Optional
 import os
+import numpy as np
+import pandas as pd
 import xarray as xr
 import uxarray as ux
 from suxarray.grid import Grid
@@ -38,7 +40,7 @@ def read_grid(ds_out2d: xr.Dataset, ds_zcoords: Optional[xr.Dataset] = None) -> 
 
 def open_grid(
     files_out2d: Union[str, os.PathLike, list, tuple],
-    files_zcoords: Optional[Union[str, os.PathLike, list, tuple]],
+    files_zcoords: Optional[Union[str, os.PathLike, list, tuple]] = None,
     chunks: Optional[Dict[str, int]] = None,
 ) -> xr.Dataset:
     """Open SCHISM out2d and zCoordinates files and return a grid object
@@ -79,6 +81,8 @@ def open_grid(
                 "SCHISM_hgrid_face_nodes",
                 "SCHISM_hgrid_edge_nodes",
                 "dryFlagNode",
+                "dryFlagElement",
+                "dryFlagSide",
             ]
         ],
         # join="override",
@@ -88,13 +92,204 @@ def open_grid(
         parallel=True,
     )
 
-    ds_zcoords = xr.open_mfdataset(
-        files_zcoords,
-        engine="h5netcdf",
-        chunks=chunks,
-        parallel=True,
-    )
+    if files_zcoords is not None:
+        ds_zcoords = xr.open_mfdataset(
+            files_zcoords,
+            engine="h5netcdf",
+            chunks=chunks,
+            parallel=True,
+        )
+    else:
+        ds_zcoords = None
 
     sxgrid = read_grid(ds_out2d, ds_zcoords)
 
     return sxgrid
+
+
+def open_hgrid_gr3(path_hgrid: Union[str, os.PathLike]) -> Grid:
+    """Read SCHISM hgrid.gr3 file and return a suxarray grid
+
+    Parameters
+    """
+    # read the header
+    with open(path_hgrid, "r") as f:
+        f.readline()
+        n_faces, n_nodes = [int(x) for x in f.readline().strip().split()[:2]]
+
+    # Read the node section. Read only up to the fourth column
+    df_nodes = pd.read_csv(
+        path_hgrid,
+        skiprows=2,
+        header=None,
+        nrows=n_nodes,
+        sep="\s+",
+        usecols=range(4),
+    )
+
+    # Read the face section. Read only up to the sixth column. The last column
+    # may exist or not.
+    df_faces = pd.read_csv(
+        path_hgrid,
+        skiprows=2 + n_nodes,
+        header=None,
+        nrows=n_faces,
+        sep="\s+",
+        names=range(6),
+    )
+
+    # Create suxarray grid
+    ds = xr.Dataset()
+    ds["SCHISM_hgrid_node_x"] = xr.DataArray(
+        data=df_nodes[1].values,
+        dims="nSCHISM_hgrid_node",
+        attrs={"units": "m", "standard_name": "projection_x_coordinate"},
+    )
+    ds["SCHISM_hgrid_node_y"] = xr.DataArray(
+        data=df_nodes[2].values,
+        dims="nSCHISM_hgrid_node",
+        attrs={"units": "m", "standard_name": "projection_y_coordinate"},
+    )
+    # ds = _transform_coordinates(ds)
+
+    # Replace NaN with -1
+    df_faces = df_faces.fillna(0)
+    ds["SCHISM_hgrid_face_nodes"] = xr.DataArray(
+        data=df_faces[[2, 3, 4, 5]].astype(int).values - 1,
+        dims=("nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"),
+        attrs={"start_index": 0, "cf_role": "face_node_connectivity", "_FillValue": -1},
+    )
+    # ds["depth"] = df_nodes[3].values
+    da_topology = xr.DataArray(name="SCHISM_hgrid")
+    da_topology = da_topology.assign_attrs(
+        long_name="Topology data of 2d unstructured mesh",
+        topology_dimension=2,
+        cf_role="mesh_topology",
+        node_coordinates="SCHISM_hgrid_node_x SCHISM_hgrid_node_y",
+        # edge_coordinates="SCHISM_hgrid_edge_x SCHISM_hgrid_edge_y",
+        # face_coordinates="SCHISM_hgrid_face_x SCHISM_hgrid_face_y",
+        # edge_node_connectivity="SCHISM_hgrid_edge_nodes",
+        face_node_connectivity="SCHISM_hgrid_face_nodes",
+    )
+    ds["SCHISM_hgrid"] = da_topology
+
+    # grid = Grid.from_dataset(ds, ds_zcoords=None)
+    grid = read_grid(ds, None)
+    return grid
+
+
+def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None:
+    """Write a SCHISM grid to a NetCDF file
+
+    The goal of this function is to write a SCHISM grid information to a NetCDF
+    file that can be understood by SCHISM VisIt plugin.
+
+    Parameters
+    ----------
+    file_gridout : str or Path
+        Path to the output NetCDF file
+    grid : Grid
+        SCHISM grid object
+    """
+    ds = grid.to_xarray()
+
+    # Update the face and edge connectivity to start from 1
+    face_con = ds.face_node_connectivity.values.copy()
+    face_con[
+        ds.face_node_connectivity.values == ds.face_node_connectivity._FillValue
+    ] = -2
+    face_con = face_con.astype("int32")
+    face_con += 1
+    edge_con = ds.edge_node_connectivity.values.copy()
+    edge_con[edge_con == ds.edge_node_connectivity._FillValue] = -2
+    edge_con = edge_con.astype("int32")
+    edge_con += 1
+
+    ds["face_node_connectivity"] = xr.DataArray(
+        face_con,
+        dims=("n_face", "n_max_face_nodes"),
+        attrs={
+            "cf_role": "face_node_connectivity",
+            "start_index": np.int32(1),
+            "_FillValue": np.int32(-1),
+        },
+    )
+    ds["edge_node_connectivity"] = xr.DataArray(
+        edge_con,
+        dims=("n_edge", "two"),
+        attrs={
+            "cf_role": "edge_node_connectivity",
+            "start_index": np.int32(1),
+            "_FillValue": np.int32(-1),
+        },
+    )
+
+    # Rename variables to SCHISM specific names
+    varnames_to_swap = {
+        "node_x": "SCHISM_hgrid_node_x",
+        "node_y": "SCHISM_hgrid_node_y",
+        "edge_x": "SCHISM_hgrid_edge_x",
+        "edge_y": "SCHISM_hgrid_edge_y",
+        "face_x": "SCHISM_hgrid_face_x",
+        "face_y": "SCHISM_hgrid_face_y",
+        "face_node_connectivity": "SCHISM_hgrid_face_nodes",
+        "edge_node_connectivity": "SCHISM_hgrid_edge_nodes",
+    }
+    ds = ds.rename(varnames_to_swap)
+
+    # Bring back SCHISM specific information for out2d
+    ds = xr.merge(
+        [
+            ds,
+            grid.sgrid_info[
+                ["dryFlagNode", "dryFlagElement", "dryFlagSide", "bottom_index_node"]
+            ],
+        ]
+    )
+
+    # Switch back to SCHISM dimension names
+    dims_to_swap = {
+        "n_node": "nSCHISM_hgrid_node",
+        "n_face": "nSCHISM_hgrid_face",
+        "n_edge": "nSCHISM_hgrid_edge",
+        "n_max_face_nodes": "nMaxSCHISM_hgrid_face_nodes",
+    }
+    ds = ds.swap_dims(dims_to_swap)
+
+    # Remove variables that we do not want.
+    ds = ds.drop_vars(
+        [
+            "face_lon",
+            "face_lat",
+            "edge_lon",
+            "edge_lat",
+            "node_lon",
+            "node_lat",
+            "grid_topology",
+        ]
+    )
+
+    # Add back the SCHISM grid topology information
+    ds["SCHISM_hgrid"] = xr.DataArray(
+        data="",
+        name="SCHISM_hgrid",
+        attrs={
+            "long_name": "Topology data of 2d unstructured mesh",
+            "topology_dimension": 2,
+            "cf_role": "mesh_topology",
+            "node_coordinates": "SCHISM_hgrid_node_x SCHISM_hgrid_node_y",
+            "edge_coordinates": "SCHISM_hgrid_edge_x SCHISM_hgrid_edge_y",
+            "face_coordinates": "SCHISM_hgrid_face_x SCHISM_hgrid_face_y",
+            "edge_node_connectivity": "SCHISM_hgrid_edge_nodes",
+            "face_node_connectivity": "SCHISM_hgrid_face_nodes",
+        },
+    )
+
+    if "n_layers" in grid.sgrid_info.dims:
+        ds["dummy"] = xr.DataArray(
+            data=grid.sgrid_info.n_layer.values, dims="nSCHISM_vgrid_layers"
+        )
+    else:
+        ds["dummy"] = xr.DataArray(data=np.array([0]), dims="nSCHISM_vgrid_layers")
+
+    ds.to_netcdf(file_gridout)

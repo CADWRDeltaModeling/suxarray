@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
-
+import numpy as np
 import xarray as xr
 from xarray.core.utils import UncachedAccessor
 import uxarray

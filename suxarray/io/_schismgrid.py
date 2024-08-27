@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Optional
 import pyproj
-import pandas as pd
 import xarray as xr
 from uxarray.conventions.ugrid import (
     CARTESIAN_NODE_COORDINATES,
@@ -9,7 +8,6 @@ from uxarray.conventions.ugrid import (
     CARTESIAN_EDGE_COORDINATES,
 )
 from uxarray.io._ugrid import _read_ugrid
-import suxarray as sx
 from suxarray.conventions.schism_grid import (
     SCHISM_GRID_TIME_VARIABLES,
     SCHISM_CARTESIAN_NODE_COORDINATES,
@@ -81,9 +79,12 @@ def _read_schism_grid(
     if ds_zcoords is not None:
         dim_dict_zcoords = {
             "nSCHISM_hgrid_node": "n_node",
-            "nSCHISM_vgrid_layers": "n_layer",
+            "nSCHISM_hgrid_edge": "n_edge",
+            "nSCHISM_hgrid_face": "n_face",
         }
         ds_zcoords = ds_zcoords.swap_dims(dim_dict_zcoords)
+        if "nSCHISM_vgrid_layers" in ds_zcoords.dims:
+            ds_zcoords = ds_zcoords.swap_dims({"nSCHISM_vgrid_layers": "n_layer"})
 
     ds_sgrid_info = xr.Dataset()
     for varname in SCHISM_GRID_TIME_VARIABLES:
@@ -91,19 +92,6 @@ def _read_schism_grid(
             ds_sgrid_info[varname] = ds_zcoords[varname]
 
     return ds_out2d, ds_sgrid_info
-
-
-def write_ugrid(grid: Grid, file_gridout):
-    """Write a SCHISM grid to a NetCDF file
-
-    Parameters
-    ----------
-    file_gridout : str or Path
-        Path to the output NetCDF file
-    grid : Grid
-        SCHISM grid object
-    """
-    grid._ds.to_netcdf(file_gridout)
 
 
 def _find_grid_topology_varname(ds: xr.Dataset) -> str:
@@ -230,74 +218,3 @@ def _transform_coordinates(
     ds[var_grid_topology] = grid_topology_new
 
     return ds
-
-
-def open_hgrid_gr3(path_hgrid: Union[str, os.PathLike]) -> Grid:
-    """Read SCHISM hgrid.gr3 file and return a suxarray grid
-
-    Parameters
-    """
-    # read the header
-    with open(path_hgrid, "r") as f:
-        f.readline()
-        n_faces, n_nodes = [int(x) for x in f.readline().strip().split()[:2]]
-
-    # Read the node section. Read only up to the fourth column
-    df_nodes = pd.read_csv(
-        path_hgrid,
-        skiprows=2,
-        header=None,
-        nrows=n_nodes,
-        sep="\s+",
-        usecols=range(4),
-    )
-
-    # Read the face section. Read only up to the sixth column. The last column
-    # may exist or not.
-    df_faces = pd.read_csv(
-        path_hgrid,
-        skiprows=2 + n_nodes,
-        header=None,
-        nrows=n_faces,
-        sep="\s+",
-        names=range(6),
-    )
-
-    # Create suxarray grid
-    ds = xr.Dataset()
-    ds["SCHISM_hgrid_node_x"] = xr.DataArray(
-        data=df_nodes[1].values,
-        dims="nSCHISM_hgrid_node",
-        attrs={"units": "m", "standard_name": "projection_x_coordinate"},
-    )
-    ds["SCHISM_hgrid_node_y"] = xr.DataArray(
-        data=df_nodes[2].values,
-        dims="nSCHISM_hgrid_node",
-        attrs={"units": "m", "standard_name": "projection_y_coordinate"},
-    )
-    # ds = _transform_coordinates(ds)
-
-    # Replace NaN with -1
-    df_faces = df_faces.fillna(0)
-    ds["SCHISM_hgrid_face_nodes"] = xr.DataArray(
-        data=df_faces[[2, 3, 4, 5]].astype(int).values - 1,
-        dims=("nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"),
-        attrs={"start_index": 0, "cf_role": "face_node_connectivity", "_FillValue": -1},
-    )
-    # ds["depth"] = df_nodes[3].values
-    da_topology = xr.DataArray(name="SCHISM_hgrid")
-    da_topology = da_topology.assign_attrs(
-        long_name="Topology data of 2d unstructured mesh",
-        topology_dimension=2,
-        cf_role="mesh_topology",
-        node_coordinates="SCHISM_hgrid_node_x SCHISM_hgrid_node_y",
-        # edge_coordinates="SCHISM_hgrid_edge_x SCHISM_hgrid_edge_y",
-        # face_coordinates="SCHISM_hgrid_face_x SCHISM_hgrid_face_y",
-        # edge_node_connectivity="SCHISM_hgrid_edge_nodes",
-        face_node_connectivity="SCHISM_hgrid_face_nodes",
-    )
-    ds["SCHISM_hgrid"] = da_topology
-
-    # grid = Grid.from_dataset(ds, ds_zcoords=None)
-    grid = sx.core.api.read_grid(ds, None)
-    return grid
