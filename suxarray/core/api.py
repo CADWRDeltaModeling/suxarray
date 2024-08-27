@@ -201,7 +201,6 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
     face_con = face_con.astype("int32")
     face_con += 1
     edge_con = ds.edge_node_connectivity.values.copy()
-    edge_con[edge_con == ds.edge_node_connectivity._FillValue] = -2
     edge_con = edge_con.astype("int32")
     edge_con += 1
 
@@ -285,6 +284,8 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
         },
     )
 
+    # If the grid dataset does not have n_layers dim, add a dummy variable to
+    # keep it.
     if "n_layers" in grid.sgrid_info.dims:
         ds["dummy"] = xr.DataArray(
             data=grid.sgrid_info.n_layer.values, dims="nSCHISM_vgrid_layers"
