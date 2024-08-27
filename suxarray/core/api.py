@@ -6,7 +6,8 @@ import xarray as xr
 import uxarray as ux
 from suxarray.grid import Grid
 from suxarray.core.dataset import SxDataset
-from suxarray.io._schismgrid import _transform_coordinates
+from suxarray.core.dataarray import SxDataArray
+from suxarray.io._schismgrid import _transform_coordinates, _rename_dims
 
 
 def read_schism_nc(grid: Grid, ds_data: xr.Dataset) -> SxDataset:
@@ -80,6 +81,7 @@ def open_grid(
                 "bottom_index_node",
                 "SCHISM_hgrid_face_nodes",
                 "SCHISM_hgrid_edge_nodes",
+                "depth",
                 "dryFlagNode",
                 "dryFlagElement",
                 "dryFlagSide",
@@ -286,7 +288,7 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
 
     # If the grid dataset does not have n_layers dim, add a dummy variable to
     # keep it.
-    if "n_layers" in grid.sgrid_info.dims:
+    if "n_layer" in grid.sgrid_info.dims:
         ds["dummy"] = xr.DataArray(
             data=grid.sgrid_info.n_layer.values, dims="nSCHISM_vgrid_layers"
         )
@@ -294,3 +296,36 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
         ds["dummy"] = xr.DataArray(data=np.array([0]), dims="nSCHISM_vgrid_layers")
 
     ds.to_netcdf(file_gridout)
+
+
+def write_schism_nc(
+    sxda: SxDataArray, file_dataout: Optional[Union[str, os.PathLike]] = None
+) -> None:
+    """Write a SCHISM data array to NetCDF files
+
+    NOTE: WIP. The API is not finalized.
+
+    Parameters
+    ----------
+    sxda : SxDataset
+        SCHISM data array
+    file_dataout : str or Path, optional
+        Path to the output NetCDF file
+    """
+    # TODO Hardcoded file name
+    file_gridout = "out2d_1.nc"
+    write_schism_grid(sxda.sxgrid, file_gridout)
+
+    # zCoordinates
+    if "zCoordinates" in sxda.sxgrid.sgrid_info:
+        # TODO Hardcoded file name for now
+        file_zcoords = "zCoordinates_1.nc"
+        da = _rename_dims(sxda.sxgrid.sgrid_info.zCoordinates)
+        da.to_netcdf(file_zcoords)
+
+    # TODO Hardcoded file name for now
+    file_dataout = f"{sxda.name}_1.nc"
+    da = _rename_dims(sxda)
+    da.to_netcdf(file_dataout)
+
+    return

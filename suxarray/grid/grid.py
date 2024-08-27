@@ -68,9 +68,7 @@ class Grid(ux.Grid):
     subset = UncachedAccessor(GridSubsetAccessor)
 
     @classmethod
-    def from_dataset(
-        cls, ds_out2d: xr.Dataset, ds_zcoords: xr.Dataset, **kwargs
-    ):
+    def from_dataset(cls, ds_out2d: xr.Dataset, ds_zcoords: xr.Dataset, **kwargs):
         """Create a Grid object from a SCHISM output 2D dataset and a z-coordinate dataset
 
         Parameters
@@ -85,9 +83,7 @@ class Grid(ux.Grid):
         Grid
         """
         source_grid_spec = "UGRID"
-        ds_grid, ds_sgrid_info = _read_schism_grid(
-            ds_out2d, ds_zcoords
-        )
+        ds_grid, ds_sgrid_info = _read_schism_grid(ds_out2d, ds_zcoords)
         return cls(ds_grid, ds_sgrid_info, source_grid_spec)
 
     @property

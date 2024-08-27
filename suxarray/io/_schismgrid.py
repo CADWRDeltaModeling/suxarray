@@ -218,3 +218,29 @@ def _transform_coordinates(
     ds[var_grid_topology] = grid_topology_new
 
     return ds
+
+
+def _rename_dims(da: SxDataArray) -> SxDataArray:
+    """Rename SCHISM grid dimensions to UGRID dimensions
+
+    Parameters
+    ----------
+    da : SxDataArray
+        SCHISM data array
+
+    Returns
+    -------
+    SxDataArray
+        SCHISM data array with renamed dimensions
+    """
+    dim_dict = {
+        "n_node": "nSCHISM_hgrid_node",
+        "n_edge": "nSCHISM_hgrid_edge",
+        "n_face": "nSCHISM_hgrid_face",
+        "n_layer": "nSCHISM_vgrid_layers",
+        "nMesh2_node": "nSCHISM_hgrid_node",
+    }
+    for k, v in dim_dict.items():
+        if k in da.dims:
+            da = da.rename({k: v})
+    return da
