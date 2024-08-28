@@ -11,6 +11,7 @@ from .core.api import (
     open_hgrid_gr3,
     write_schism_grid,
     write_schism_nc,
+    write_gr3,
 )
 from .core.dataset import SxDataset
 from .core.dataarray import SxDataArray
@@ -25,5 +26,6 @@ __all__ = (
     "read_schism_nc",
     "write_schism_grid",
     "write_schism_nc",
+    "write_gr3",
     "Grid",
 )

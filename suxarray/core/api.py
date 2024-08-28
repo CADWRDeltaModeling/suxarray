@@ -334,3 +334,49 @@ def write_schism_nc(
     da.to_netcdf(file_dataout)
 
     return
+
+
+def write_gr3(
+    sxda: SxDataArray,
+    file_gr3: Union[str, os.PathLike],
+    fill_value: Optional[float] = -9999.0,
+) -> None:
+    """Write a SCHISM grid to a gr3 file
+
+    Parameters
+    ----------
+    sxda : SxDataArray
+        SCHISM data array to write out
+    file_gr3 : str or Path
+        Path to the output gr3 file
+    fill_value : float, optional
+        Fill value to use for missing values
+    """
+    varname = sxda.name
+    grid = sxda.sxgrid
+    with open(file_gr3, "w") as f:
+        f.write(f"{varname}\n{grid.face_node_connectivity.shape[0]} {grid.n_node}\n")
+
+    # TODO Need to check the dimension...
+    values = sxda.values
+    values[np.isnan(values)] = fill_value
+    pd.DataFrame(
+        data={
+            "node_index": np.arange(grid.n_node, dtype=np.int32) + 1,
+            "x": grid.node_x.values,
+            "y": grid.node_y.values,
+            "z": values,
+        }
+    ).to_csv(file_gr3, sep=" ", header=None, index=None, mode="a")
+    # Connectivity
+    pd.DataFrame(
+        data={
+            "index": np.arange(grid.face_node_connectivity.shape[0], dtype=np.int32)
+            + 1,
+            "n_nodes": np.sum(grid.face_node_connectivity >= 0, axis=1, dtype=np.int32),
+            "node1": grid.face_node_connectivity[:, 0] + 1,
+            "node2": grid.face_node_connectivity[:, 1] + 1,
+            "node3": grid.face_node_connectivity[:, 2] + 1,
+            "node4": grid.face_node_connectivity[:, 3] + 1,
+        }
+    ).to_csv(file_gr3, sep=" ", header=None, index=None, mode="a")
