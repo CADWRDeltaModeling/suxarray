@@ -8,6 +8,7 @@ from suxarray.grid import Grid
 from suxarray.core.dataset import SxDataset
 from suxarray.core.dataarray import SxDataArray
 from suxarray.io._schismgrid import _transform_coordinates, _rename_dims
+from suxarray.conventions.schism_grid import SCHISM_GRID_TIME_VARIABLES_IN_OUT2D
 
 
 def read_schism_nc(grid: Grid, ds_data: xr.Dataset) -> SxDataset:
@@ -100,6 +101,10 @@ def open_grid(
             engine="h5netcdf",
             chunks=chunks,
             parallel=True,
+            join="override",
+            coords="minimal",
+            data_vars="minimal",
+            compat="override",
         )
     else:
         ds_zcoords = None
@@ -180,7 +185,9 @@ def open_hgrid_gr3(path_hgrid: Union[str, os.PathLike]) -> Grid:
     return grid
 
 
-def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None:
+def write_schism_grid(
+    grid: Grid, file_gridout: Union[str, os.PathLike], da: Optional[xr.DataArray] = None
+) -> None:
     """Write a SCHISM grid to a NetCDF file
 
     The goal of this function is to write a SCHISM grid information to a NetCDF
@@ -211,25 +218,6 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
     ds.face_node_connectivity.attrs["_FillValue"] = np.int32(-1)
     ds.edge_node_connectivity.attrs["start_index"] = np.int32(1)
 
-    ds["face_node_connectivity"] = xr.DataArray(
-        face_con,
-        dims=("n_face", "n_max_face_nodes"),
-        attrs={
-            "cf_role": "face_node_connectivity",
-            "start_index": np.int32(1),
-            "_FillValue": np.int32(-1),
-        },
-    )
-    ds["edge_node_connectivity"] = xr.DataArray(
-        edge_con,
-        dims=("n_edge", "two"),
-        attrs={
-            "cf_role": "edge_node_connectivity",
-            "start_index": np.int32(1),
-            "_FillValue": np.int32(-1),
-        },
-    )
-
     # Rename variables to SCHISM specific names
     varnames_to_swap = {
         "node_x": "SCHISM_hgrid_node_x",
@@ -243,15 +231,14 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
     }
     ds = ds.rename(varnames_to_swap)
 
-    # Bring back SCHISM specific information for out2d
-    ds = xr.merge(
-        [
-            ds,
-            grid.sgrid_info[
-                ["dryFlagNode", "dryFlagElement", "dryFlagSide", "bottom_index_node"]
-            ],
-        ]
-    )
+    # Bring back time-varying grid information
+    for varname in SCHISM_GRID_TIME_VARIABLES_IN_OUT2D:
+        if varname in grid.sgrid_info:
+            ds[varname] = grid.sgrid_info[varname]
+
+    # If a dataarray is provide, add it to the out2d, or grid
+    if da is not None:
+        ds[da.name] = da
 
     # Switch back to SCHISM dimension names
     dims_to_swap = {
@@ -295,7 +282,7 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
     # keep it.
     if "n_layer" in grid.sgrid_info.dims:
         ds["dummy"] = xr.DataArray(
-            data=grid.sgrid_info.n_layer.values, dims="nSCHISM_vgrid_layers"
+            data=grid.sgrid_info.n_layer, dims="nSCHISM_vgrid_layers"
         )
     else:
         ds["dummy"] = xr.DataArray(data=np.array([0]), dims="nSCHISM_vgrid_layers")
@@ -317,21 +304,26 @@ def write_schism_nc(
     file_dataout : str or Path, optional
         Path to the output NetCDF file
     """
-    # TODO Hardcoded file name
-    file_gridout = "out2d_1.nc"
-    write_schism_grid(sxda.sxgrid, file_gridout)
+    if "n_layer" in sxda.dims:
+        # TODO Hardcoded file name
+        files_out2d = "out2d_1.nc"
+        write_schism_grid(sxda.sxgrid, files_out2d)
 
-    # zCoordinates
-    if "zCoordinates" in sxda.sxgrid.sgrid_info:
+        # zCoordinates
+        if "zCoordinates" in sxda.sxgrid.sgrid_info:
+            # TODO Hardcoded file name for now
+            file_zcoords = "zCoordinates_1.nc"
+            da = _rename_dims(sxda.sxgrid.sgrid_info.zCoordinates)
+            da.to_netcdf(file_zcoords)
+
         # TODO Hardcoded file name for now
-        file_zcoords = "zCoordinates_1.nc"
-        da = _rename_dims(sxda.sxgrid.sgrid_info.zCoordinates)
-        da.to_netcdf(file_zcoords)
-
-    # TODO Hardcoded file name for now
-    file_dataout = f"{sxda.name}_1.nc"
-    da = _rename_dims(sxda)
-    da.to_netcdf(file_dataout)
+        file_dataout = f"{sxda.name}_1.nc"
+        da = _rename_dims(sxda)
+        da.to_netcdf(file_dataout)
+    else:
+        # TODO Hardcoded file name
+        files_out2d = "out2d_1.nc"
+        write_schism_grid(sxda.sxgrid, files_out2d, sxda)
 
     return
 
