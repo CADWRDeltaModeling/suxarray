@@ -143,12 +143,12 @@ def open_hgrid_gr3(path_hgrid: Union[str, os.PathLike]) -> Grid:
     # Create suxarray grid
     ds = xr.Dataset()
     ds["SCHISM_hgrid_node_x"] = xr.DataArray(
-        data=df_nodes[1].values,
+        data=df_nodes[1],
         dims="nSCHISM_hgrid_node",
         attrs={"units": "m", "standard_name": "projection_x_coordinate"},
     )
     ds["SCHISM_hgrid_node_y"] = xr.DataArray(
-        data=df_nodes[2].values,
+        data=df_nodes[2],
         dims="nSCHISM_hgrid_node",
         attrs={"units": "m", "standard_name": "projection_y_coordinate"},
     )
@@ -157,7 +157,7 @@ def open_hgrid_gr3(path_hgrid: Union[str, os.PathLike]) -> Grid:
     # Replace NaN with -1
     df_faces = df_faces.fillna(0)
     ds["SCHISM_hgrid_face_nodes"] = xr.DataArray(
-        data=df_faces[[2, 3, 4, 5]].astype(int).values - 1,
+        data=df_faces[[2, 3, 4, 5]].astype(int) - 1,
         dims=("nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"),
         attrs={"start_index": 0, "cf_role": "face_node_connectivity", "_FillValue": -1},
     )
@@ -196,15 +196,20 @@ def write_schism_grid(grid: Grid, file_gridout: Union[str, os.PathLike]) -> None
     ds = grid.to_xarray()
 
     # Update the face and edge connectivity to start from 1
-    face_con = ds.face_node_connectivity.values.copy()
-    face_con[
-        ds.face_node_connectivity.values == ds.face_node_connectivity._FillValue
-    ] = -2
-    face_con = face_con.astype("int32")
-    face_con += 1
-    edge_con = ds.edge_node_connectivity.values.copy()
-    edge_con = edge_con.astype("int32")
-    edge_con += 1
+    ds["face_node_connectivity"] = (
+        xr.where(
+            ds.face_node_connectivity == ds.face_node_connectivity._FillValue,
+            -2,
+            ds.face_node_connectivity,
+            keep_attrs=True,
+        ).astype("int32")
+        + 1
+    )
+    ds["edge_node_connectivity"] = ds.edge_node_connectivity.astype("int32") + 1
+
+    ds.face_node_connectivity.attrs["start_index"] = np.int32(1)
+    ds.face_node_connectivity.attrs["_FillValue"] = np.int32(-1)
+    ds.edge_node_connectivity.attrs["start_index"] = np.int32(1)
 
     ds["face_node_connectivity"] = xr.DataArray(
         face_con,
