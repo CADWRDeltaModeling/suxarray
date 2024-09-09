@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, Union
 import pyproj
 import xarray as xr
 from uxarray.conventions.ugrid import (
@@ -57,24 +57,7 @@ def _read_schism_grid(
     # variable names are updated.
     ds_out2d, dim_dict = _read_ugrid(ds_out2d)
 
-    if SCHISM_CARTESIAN_NODE_COORDINATES[0] in ds_out2d:
-        coord_dict = {
-            SCHISM_CARTESIAN_NODE_COORDINATES[0]: CARTESIAN_NODE_COORDINATES[0],
-            SCHISM_CARTESIAN_NODE_COORDINATES[1]: CARTESIAN_NODE_COORDINATES[1],
-        }
-        ds_out2d = ds_out2d.rename(coord_dict)
-    if SCHISM_CARTESIAN_EDGE_COORDINATES[0] in ds_out2d:
-        coord_dict = {
-            SCHISM_CARTESIAN_EDGE_COORDINATES[0]: CARTESIAN_EDGE_COORDINATES[0],
-            SCHISM_CARTESIAN_EDGE_COORDINATES[1]: CARTESIAN_EDGE_COORDINATES[1],
-        }
-        ds_out2d = ds_out2d.rename(coord_dict)
-    if SCHISM_CARTESIAN_FACE_COORDINATES[0] in ds_out2d:
-        coord_dict = {
-            SCHISM_CARTESIAN_FACE_COORDINATES[0]: CARTESIAN_FACE_COORDINATES[0],
-            SCHISM_CARTESIAN_FACE_COORDINATES[1]: CARTESIAN_FACE_COORDINATES[1],
-        }
-        ds_out2d = ds_out2d.rename(coord_dict)
+    ds_out2d = _rename_coords(ds_out2d)
 
     if ds_zcoords is not None:
         dim_dict_zcoords = {
@@ -90,6 +73,7 @@ def _read_schism_grid(
     for varname in SCHISM_GRID_TIME_VARIABLES:
         if ds_zcoords is not None and varname in ds_zcoords.variables:
             ds_sgrid_info[varname] = ds_zcoords[varname]
+    ds_sgrid_info = _rename_coords(ds_sgrid_info)
 
     return ds_out2d, ds_sgrid_info
 
@@ -220,7 +204,55 @@ def _transform_coordinates(
     return ds
 
 
-def _rename_dims(da: SxDataArray) -> SxDataArray:
+def _rename_coords(
+    data: Union[xr.DataArray, xr.Dataset]
+) -> Union[xr.DataArray, xr.Dataset]:
+    if SCHISM_CARTESIAN_NODE_COORDINATES[0] in data:
+        coord_dict = {
+            SCHISM_CARTESIAN_NODE_COORDINATES[0]: CARTESIAN_NODE_COORDINATES[0],
+            SCHISM_CARTESIAN_NODE_COORDINATES[1]: CARTESIAN_NODE_COORDINATES[1],
+        }
+        data = data.rename(coord_dict)
+    if SCHISM_CARTESIAN_EDGE_COORDINATES[0] in data:
+        coord_dict = {
+            SCHISM_CARTESIAN_EDGE_COORDINATES[0]: CARTESIAN_EDGE_COORDINATES[0],
+            SCHISM_CARTESIAN_EDGE_COORDINATES[1]: CARTESIAN_EDGE_COORDINATES[1],
+        }
+        data = data.rename(coord_dict)
+    if SCHISM_CARTESIAN_FACE_COORDINATES[0] in data:
+        coord_dict = {
+            SCHISM_CARTESIAN_FACE_COORDINATES[0]: CARTESIAN_FACE_COORDINATES[0],
+            SCHISM_CARTESIAN_FACE_COORDINATES[1]: CARTESIAN_FACE_COORDINATES[1],
+        }
+        data = data.rename(coord_dict)
+    return data
+
+
+def _rename_coords_back(
+    data: Union[xr.DataArray, xr.Dataset]
+) -> Union[xr.DataArray, xr.Dataset]:
+    if CARTESIAN_NODE_COORDINATES[0] in data.coords:
+        coord_dict = {
+            CARTESIAN_NODE_COORDINATES[0]: SCHISM_CARTESIAN_NODE_COORDINATES[0],
+            CARTESIAN_NODE_COORDINATES[1]: SCHISM_CARTESIAN_NODE_COORDINATES[1],
+        }
+        data = data.rename(coord_dict)
+    if CARTESIAN_EDGE_COORDINATES[0] in data.coords:
+        coord_dict = {
+            CARTESIAN_EDGE_COORDINATES[0]: SCHISM_CARTESIAN_EDGE_COORDINATES[0],
+            CARTESIAN_EDGE_COORDINATES[1]: SCHISM_CARTESIAN_EDGE_COORDINATES[1],
+        }
+        data = data.rename(coord_dict)
+    if CARTESIAN_FACE_COORDINATES[0] in data.coords:
+        coord_dict = {
+            CARTESIAN_FACE_COORDINATES[0]: SCHISM_CARTESIAN_FACE_COORDINATES[0],
+            CARTESIAN_FACE_COORDINATES[1]: SCHISM_CARTESIAN_FACE_COORDINATES[1],
+        }
+        data = data.rename(coord_dict)
+    return data
+
+
+def _rename_dims_back(da: SxDataArray) -> SxDataArray:
     """Rename SCHISM grid dimensions to UGRID dimensions
 
     Parameters
