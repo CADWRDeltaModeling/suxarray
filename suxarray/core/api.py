@@ -7,7 +7,11 @@ import uxarray as ux
 from suxarray.grid import Grid
 from suxarray.core.dataset import SxDataset
 from suxarray.core.dataarray import SxDataArray
-from suxarray.io._schismgrid import _transform_coordinates, _rename_dims
+from suxarray.io._schismgrid import (
+    _transform_coordinates,
+    _rename_dims_back,
+    _rename_coords_back,
+)
 from suxarray.conventions.schism_grid import SCHISM_GRID_TIME_VARIABLES_IN_OUT2D
 
 
@@ -229,12 +233,13 @@ def write_schism_grid(
         "face_node_connectivity": "SCHISM_hgrid_face_nodes",
         "edge_node_connectivity": "SCHISM_hgrid_edge_nodes",
     }
-    ds = ds.rename(varnames_to_swap)
 
     # Bring back time-varying grid information
     for varname in SCHISM_GRID_TIME_VARIABLES_IN_OUT2D:
         if varname in grid.sgrid_info:
             ds[varname] = grid.sgrid_info[varname]
+
+    ds = ds.rename(varnames_to_swap)
 
     # If a dataarray is provide, add it to the out2d, or grid
     if da is not None:
@@ -287,7 +292,10 @@ def write_schism_grid(
     else:
         ds["dummy"] = xr.DataArray(data=np.array([0]), dims="nSCHISM_vgrid_layers")
 
-    ds.to_netcdf(file_gridout)
+    # ds.to_netcdf(file_gridout)
+    days, datasets = zip(*ds.resample(time="1D", origin="start"))
+    path_outputs = [f"out2d_{day + 1}.nc" for day in range(len(days))]
+    xr.save_mfdataset(datasets, path_outputs)
 
 
 def write_schism_nc(
@@ -312,14 +320,23 @@ def write_schism_nc(
         # zCoordinates
         if "zCoordinates" in sxda.sxgrid.sgrid_info:
             # TODO Hardcoded file name for now
-            file_zcoords = "zCoordinates_1.nc"
-            da = _rename_dims(sxda.sxgrid.sgrid_info.zCoordinates)
-            da.to_netcdf(file_zcoords)
+            # file_zcoords = "zCoordinates_1.nc"
+            da = _rename_dims_back(sxda.sxgrid.sgrid_info.zCoordinates)
+            da = _rename_coords_back(da)
+            # da.to_netcdf(file_zcoords)
+            days, datasets = zip(*da.to_dataset().resample(time="1D", origin="start"))
+            path_outputs = [f"zCoordinates_{day + 1}.nc" for day in range(len(days))]
+            xr.save_mfdataset(datasets, path_outputs)
 
         # TODO Hardcoded file name for now
-        file_dataout = f"{sxda.name}_1.nc"
-        da = _rename_dims(sxda)
-        da.to_netcdf(file_dataout)
+        # file_dataout = f"{sxda.name}_1.nc"
+        da = _rename_dims_back(sxda)
+        da = _rename_coords_back(da)
+        # da.to_netcdf(file_dataout)
+        days, datasets = zip(*da.to_dataset().resample(time="1D", origin="start"))
+        path_outputs = [f"{sxda.name}_{day + 1}.nc" for day in range(len(days))]
+        xr.save_mfdataset(datasets, path_outputs)
+
     else:
         # TODO Hardcoded file name
         files_out2d = "out2d_1.nc"
