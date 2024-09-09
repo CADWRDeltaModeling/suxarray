@@ -99,7 +99,7 @@ class Grid(ux.Grid):
         # Suxarray Grid object. It needs to be cast.
         grid_new = super().isel(**dim_kwargs)
         sgrid_new = Grid(grid_new, ds_sgrid_info=self.sgrid_info)
-        if self.sgrid_info is not None:
+        if self.sgrid_info:
             sgrid_new = sgrid_new.sgrid_isel(**dim_kwargs)
         return sgrid_new
 
