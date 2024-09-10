@@ -8,6 +8,7 @@ from shapely.geometry import Point
 from suxarray.grid import Grid
 from suxarray.subset import DataArraySubsetAccessor
 from suxarray.utils.computing import _depth_average
+from suxarray.grid.area import _integrate_nodal
 
 
 class SxDataArray(uxarray.UxDataArray):
@@ -74,3 +75,46 @@ class SxDataArray(uxarray.UxDataArray):
         )
         name = f"depth_averaged_{self.name}"
         return SxDataArray(da_da, sxgrid=self.sxgrid, name=name)
+
+    def integrate(
+        self, quadrature_rule: Optional[str] = "triangular", order: Optional[int] = 2
+    ) -> SxDataArray:
+        if self.values.shape[-1] == self.sxgrid.n_face:
+            return super().integrate(quadrature_rule=quadrature_rule, order=order)
+        elif self.values.shape[-1] == self.sxgrid.n_edge:
+            raise ValueError("Integrate is not supported for edge values")
+        elif self.values.shape[-1] == self.sxgrid.n_node:
+            # If there is a vertical dimension, n_layer, raise an error for now
+            if "n_layer" in self.dims:
+                raise ValueError("Integrate is not supported for 3D nodal values yet.")
+            else:
+                integral = xr.apply_ufunc(
+                    _integrate_nodal,
+                    self.sxgrid.node_x,
+                    self.sxgrid.node_y,
+                    self,
+                    self.sxgrid.face_node_connectivity,
+                    input_core_dims=[
+                        [
+                            "n_node",
+                        ],
+                        [
+                            "n_node",
+                        ],
+                        [
+                            "n_node",
+                        ],
+                        [
+                            "n_face",
+                            "n_max_face_nodes",
+                        ],
+                    ],
+                    output_core_dims=[["n_face"]],
+                    output_dtypes=self.dtype,
+                    dask="parallelized",
+                )
+            dims = self.dims[:-1] + ("n_face",)
+            sxda = SxDataArray(integral, sxgrid=self.sxgrid, dims=dims, name=self.name)
+            return sxda
+        else:
+            raise ValueError("None of dimensions match the grid information")
