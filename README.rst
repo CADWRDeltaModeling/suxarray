@@ -1,5 +1,5 @@
 ========
-suxarray
+Suxarray
 ========
 
 ``suxarray`` is an extension of uxarray for SCHISM grids.
@@ -16,23 +16,22 @@ Goals
 
 ``suxarray`` is intended to use ``xarray`` through ``uxarray`` while keeping and handling SCHISM grid-specific information. Also, it will provide useful operations for SCHISM grid data.
 
-
-Features
---------
-
-TBD
+.. note::
+    ```suxarray``` is actively being developed, and the API may change frequently.
 
 
 Installation
 ------------
 
-TBD
+Please see the installation section in the documentation at https://cadwrdeltamodeling.github.io/suxarray/main/installation.html.
 
 
-Credits
+Documentation
+-------------
+The full documentation is at GitHub https://cadwrdeltamodeling.github.io/suxarray/.
+
+
+License
 -------
 
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+``suxarray`` is licensed under the MIT license. See the LICENSE file for more information.

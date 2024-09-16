@@ -2,7 +2,7 @@
 
 __author__ = """California Department of Water Resources"""
 __email__ = "knam@water.ca.gov"
-__version__ = "0.2.0"
+__version__ = "2024.09.0"
 
 from .core.api import (
     open_grid,

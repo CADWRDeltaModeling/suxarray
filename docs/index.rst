@@ -1,4 +1,4 @@
-Welcome to suxarray's documentation!
+Welcome to Suxarray's documentation!
 ======================================
 
 .. toctree::
@@ -8,10 +8,9 @@ Welcome to suxarray's documentation!
    readme
    installation
    usage
-   modules
+   history
    contributing
    authors
-   history
 
 Indices and tables
 ==================

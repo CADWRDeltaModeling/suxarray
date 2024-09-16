@@ -3,7 +3,7 @@
 name: docs
 on: [push, pull_request, workflow_dispatch]
 permissions:
-    contents: write
+  contents: write
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -14,14 +14,16 @@ jobs:
         run: >
           pip install uxarray pandas xarray numba netcdf4 shapely holoviews
           datashader click sphinx sphinx_rtd_theme nbsphinx
+          sphinx-versioned-docs
       - name: Sphinx build
         run: |
-          sphinx-build docs docs_build
+          sphinx-apidoc -o docs suxarray
+          sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "v2024.06" --main-branch main
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3.9.2
         # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs_build
+          publish_dir: ./docs/_build
           force_orphan: true
