@@ -18,7 +18,7 @@ jobs:
       - name: Sphinx build
         run: |
           sphinx-apidoc -o docs suxarray
-          sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "v2024.06" --main-branch main
+          sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "v2024.09.0" --main-branch v2024.09.0
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3.9.2
         # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
