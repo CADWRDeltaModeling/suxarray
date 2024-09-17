@@ -65,10 +65,10 @@ def open_grid(
     `suxarray.Grid`
     """
 
-    if chunks is None:
-        chunks = {
-            "time": 12,
-        }
+    # if chunks is None:
+    #     chunks = {
+    #         "time": 12,
+    #     }
     ds_out2d = xr.open_mfdataset(
         files_out2d,
         engine="h5netcdf",
