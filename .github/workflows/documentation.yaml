@@ -25,7 +25,7 @@ jobs:
         run: |
           pip install ../uxarray
           pip install --no-deps .
-          pip install sphinx sphinx_rtd_theme myst-nb sphinx-versioned-docs
+          pip install h5netcdf sphinx sphinx_rtd_theme myst-nb sphinx-versioned-docs
           sphinx-apidoc -o docs suxarray
           sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "v2024.09.0" --main-branch v2024.09.0
         working-directory: ./suxarray
