@@ -177,4 +177,4 @@ texinfo_documents = [
 #     "html_image",
 # ]
 # myst_url_schemes = ("http", "https", "mailto")
-# jupyter_execute_notebooks = "auto"
+jupyter_execute_notebooks = "off"
