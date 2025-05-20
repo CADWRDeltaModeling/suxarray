@@ -1,11 +1,8 @@
 import numpy as np
-from numba import njit, config
-from uxarray.constants import ENABLE_JIT_CACHE, ENABLE_JIT
-
-config.DISABLE_JIT = not ENABLE_JIT
+from numba import njit
 
 
-@njit(cache=ENABLE_JIT_CACHE)
+@njit(cache=True)
 def _face_area_tri3(x, y):
     """Calculate the area of a triangle with three nodes
 
@@ -24,7 +21,7 @@ def _face_area_tri3(x, y):
     return np.abs(0.5 * ((x[0] - x[2]) * (y[1] - y[2]) - (x[1] - x[2]) * (y[0] - y[2])))
 
 
-@njit(cache=ENABLE_JIT_CACHE)
+@njit(cache=True)
 def _integrate_triangle(x, y, z):
     """
     Integrate over a triangle using the three corner points.
@@ -36,14 +33,14 @@ def _integrate_triangle(x, y, z):
     )
 
 
-@njit(cache=ENABLE_JIT_CACHE)
+@njit(cache=True)
 def _gauss_quadrature_points_order2():
     return np.array([[-1 / np.sqrt(3), 1 / np.sqrt(3)]], dtype=np.float64), np.array(
         [1.0, 1.0]
     )
 
 
-@njit(cache=ENABLE_JIT_CACHE)
+@njit(cache=True)
 def _shape_functions_quad_bilinear(xi, eta):
     return np.array(
         [
@@ -55,7 +52,7 @@ def _shape_functions_quad_bilinear(xi, eta):
     )
 
 
-@njit(cache=ENABLE_JIT_CACHE)
+@njit(cache=True)
 def _shape_functions_derivative_quad_bilinear(xi, eta):
     dxi = np.array(
         [-0.25 * (1 - eta), 0.25 * (1 - eta), 0.25 * (1 + eta), -0.25 * (1 + eta)],
@@ -66,10 +63,10 @@ def _shape_functions_derivative_quad_bilinear(xi, eta):
     return dxi, deta
 
 
-@njit(cache=ENABLE_JIT_CACHE)
+@njit(cache=True)
 def _integrate_quad(x, y, z):
     # points, weights = _gauss_quadrature_points_order2()
-    points = np.array([[-0.577350269189626,  0.577350269189626]])
+    points = np.array([[-0.577350269189626, 0.577350269189626]])
     weights = np.array([1.0, 1.0])
     result = np.zeros((z.shape[0],))
 
@@ -92,7 +89,7 @@ def _integrate_quad(x, y, z):
     return result
 
 
-@njit(cache=ENABLE_JIT_CACHE)
+@njit(cache=True)
 def _integrate_nodal(node_x, node_y, values, connectivity):
     n_elements = connectivity.shape[0]
     result = np.zeros((values.shape[0], n_elements))
