@@ -25,7 +25,7 @@ def create_vtk_grid(grid):
     vtk.vtkUnstructuredGrid
     """
     # Get he number of nodes
-    n_points = grid.nMesh2_node
+    n_points = grid.n_node
     # Create an unstructured grid object
     vtkgrid = vtk.vtkUnstructuredGrid()
 
@@ -35,7 +35,7 @@ def create_vtk_grid(grid):
 
     v_set_point = np.vectorize(
         lambda i, x, y: points.SetPoint(i, x, y, 0.))
-    v_set_point(np.arange(n_points), grid.Mesh2_node_x, grid.Mesh2_node_y)
+    v_set_point(np.arange(n_points), grid.node_x, grid.node_y)
     vtkgrid.SetPoints(points)
 
     # Create faces (or cells)
@@ -46,7 +46,7 @@ def create_vtk_grid(grid):
         else:
             vtkgrid.InsertNextCell(VTK_QUAD, 4, face[:4])
 
-    [insert_cell(face) for face in (grid.Mesh2_face_nodes - 1).values]
+    [insert_cell(face) for face in grid.face_node_connectivity.values]
     # xr.apply_ufunc(insert_cell, grid.Mesh2_face_nodes - 1,
     #                input_core_dims=[['nMaxSCHISM_hgrid_face_nodes',]],
     #                dask='parallelized',

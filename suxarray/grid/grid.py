@@ -117,7 +117,7 @@ class Grid(ux.Grid):
             sgrid_info = sgrid_info.isel(
                 n_node=self._ds["subgrid_node_indices"],
                 n_face=self._ds["subgrid_face_indices"],
-                n_edge=self._ds["subgrid_edge_indices"],
+                # n_edge=self._ds["subgrid_edge_indices"],
             )
 
         return Grid(self, ds_sgrid_info=sgrid_info)

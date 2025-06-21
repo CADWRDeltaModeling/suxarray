@@ -65,7 +65,7 @@ class DataArraySubsetAccessor(uxarray.subset.DataArraySubsetAccessor):
             {
                 "subgrid_node_indices": "original_node_indices",
                 "subgrid_face_indices": "original_face_indices",
-                "subgrid_edge_indices": "original_edge_indices",
+                # "subgrid_edge_indices": "original_edge_indices",
             }
         )
         return sxda_subest
