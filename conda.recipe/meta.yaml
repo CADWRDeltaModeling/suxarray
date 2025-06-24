@@ -1,8 +1,8 @@
-{% set sdata = load_setup_py_data() %}
+{% set pyproject = load_file_data("pyproject.toml") %}
 
 package:
-  name: suxarray
-  version: {{ sdata['version'] }}
+  name: {{ pyproject['project']['name'] }}
+  version: {{ pyproject['project']['version'] }}
 
 source:
   path: ..
@@ -10,28 +10,25 @@ source:
 build:
   noarch: python
   number: 0
-  script: python setup.py --quiet install --single-version-externally-managed --record record.txt
+  script: pip install . --no-deps --ignore-installed -vv
+  {% if 'scripts' in pyproject.get('project', {}) %}
   entry_points:
-    {% for group,epoints in sdata.get("entry_points",{}).items() %}
-    {% for entry_point in epoints %}
-    - {{ entry_point }}
+    {% for script_name, entry_point in pyproject['project']['scripts'].items() %}
+    - {{ script_name }}={{ entry_point }}
     {% endfor %}
-    {% endfor %}
+  {% endif %}
 
 requirements:
-  build:
-    - python {{ sdata['python_requires'] }}
-    {% for dep in sdata['install_requires'] %}
-    - {{ dep }}
-    {% endfor %}
+  host:
+    - python {{ pyproject['project']['requires-python'] }}
+    - pip
+    - setuptools >=61.0
+    - wheel
   run:
-    - python {{ sdata['python_requires'] }}
-    {% for dep in sdata.get('install_requires',{}) %}
+    - python {{ pyproject['project']['requires-python'] }}
+    {% for dep in pyproject['project']['dependencies'] %}
     - {{ dep }}
     {% endfor %}
-    # {% for dep in sdata['install_requires'] %}
-    # - {{ dep }}
-    # {% endfor %}
 
 test:
   requires:
@@ -40,6 +37,6 @@ test:
     - suxarray
 
 about:
-  home: https://github.com/cadwrdeltamodeling
-  summary: SCHISM grid extension of uxarray
+  home: {{ pyproject['project']['urls']['Homepage'] }}
+  summary: {{ pyproject['project']['description'] }}
   license: MIT
