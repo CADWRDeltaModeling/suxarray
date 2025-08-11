@@ -5,7 +5,7 @@ import pytest
 import suxarray as sx
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def grid_test() -> sx.Grid:
     """Test mesh fixture"""
     p_cur = Path(__file__).parent.absolute()
@@ -13,7 +13,7 @@ def grid_test() -> sx.Grid:
     return grid
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def sxds_test_dask():
     """Test out2d_dask fixture"""
     p_cur = Path(__file__).parent.absolute()

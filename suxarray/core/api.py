@@ -71,7 +71,7 @@ def open_grid(
     #     }
     ds_out2d = xr.open_mfdataset(
         files_out2d,
-        engine="h5netcdf",
+        engine="netcdf4",
         mask_and_scale=False,
         chunks=chunks,
         preprocess=lambda ds: ds[
@@ -96,15 +96,13 @@ def open_grid(
         data_vars="minimal",
         compat="override",
         coords="minimal",
-        parallel=True,
     )
 
     if files_zcoords is not None:
         ds_zcoords = xr.open_mfdataset(
             files_zcoords,
-            engine="h5netcdf",
+            engine="netcdf4",
             chunks=chunks,
-            parallel=True,
             join="override",
             coords="minimal",
             data_vars="minimal",
@@ -134,7 +132,7 @@ def open_hgrid_gr3(path_hgrid: Union[str, os.PathLike]) -> Grid:
         skiprows=2,
         header=None,
         nrows=n_nodes,
-        sep="\s+",
+        sep=r"\s+",
         usecols=range(4),
     )
 
@@ -145,7 +143,7 @@ def open_hgrid_gr3(path_hgrid: Union[str, os.PathLike]) -> Grid:
         skiprows=2 + n_nodes,
         header=None,
         nrows=n_faces,
-        sep="\s+",
+        sep=r"\s+",
         names=range(6),
     )
 
@@ -241,7 +239,7 @@ def write_schism_grid(
 
     ds = ds.rename(varnames_to_swap)
 
-    # If a dataarray is provide, add it to the out2d, or grid
+    # If a dataarray is provided, add it to the out2d, or grid
     if da is not None:
         ds[da.name] = da
 
@@ -273,7 +271,7 @@ def write_schism_grid(
         name="SCHISM_hgrid",
         attrs={
             "long_name": "Topology data of 2d unstructured mesh",
-            "topology_dimension": 2,
+            "topology_dimension": int(2),
             "cf_role": "mesh_topology",
             "node_coordinates": "SCHISM_hgrid_node_x SCHISM_hgrid_node_y",
             "edge_coordinates": "SCHISM_hgrid_edge_x SCHISM_hgrid_edge_y",
