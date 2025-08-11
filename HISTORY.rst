@@ -2,6 +2,16 @@
 History
 =======
 
+v2025.6.0 (2025-08)
+-------------------
+This version adopts ``uxarray`` v2025.6.0.
+
+Changed
+^^^^^^^
+* Adopted ``uxarray`` v2025.6.0. This changes the internals of ``suxarray``, but it should not affect the user-facing APIs.
+* Use netcdf4 engine by default.
+* Changed the versioning scheme to use the year and month of the release date, following ``uxarray``.
+
 v2024.09.0 (2024-09)
 --------------------
 This version is a major release with many changes following the changes in ``uxarray`` since the last year. So, the new version does not keep the backward compatibility.

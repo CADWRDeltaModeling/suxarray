@@ -20,7 +20,7 @@ jobs:
           pip install .
           pip install sphinx sphinx_rtd_theme myst-nb sphinx-versioned-docs
           sphinx-apidoc -o docs suxarray
-          sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "v2025.6" --main-branch v2025.6
+          sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "main" --main-branch "main"
         working-directory: ./suxarray
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3.9.2

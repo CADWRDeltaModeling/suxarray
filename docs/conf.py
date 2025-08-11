@@ -57,7 +57,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "suxarray"
-copyright = "2023-2024, California Department of Water Resources"
+copyright = "2023-2025, California Department of Water Resources"
 author = "California Department of Water Resources"
 
 # The version info for the project you're documenting, acts as replacement
