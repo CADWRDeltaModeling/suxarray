@@ -12,22 +12,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ./suxarray
-      - name: Check out uxarray
-        uses: actions/checkout@v4
-        with:
-          repository: kjnam/uxarray
-          ref: refs/heads/suxarray
-          path: ./uxarray
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11
       - name: Sphinx build
         run: |
-          pip install ../uxarray
-          pip install --no-deps .
-          pip install h5netcdf sphinx sphinx_rtd_theme myst-nb sphinx-versioned-docs
+          pip install .
+          pip install sphinx sphinx_rtd_theme myst-nb sphinx-versioned-docs
           sphinx-apidoc -o docs suxarray
-          sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "v2024.09.0" --main-branch v2024.09.0
+          sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "v2025.6" --main-branch v2025.6
         working-directory: ./suxarray
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3.9.2

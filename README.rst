@@ -17,7 +17,7 @@ Goals
 ``suxarray`` is intended to use ``xarray`` through ``uxarray`` while keeping and handling SCHISM grid-specific information. Also, it will provide useful operations for SCHISM grid data.
 
 .. note::
-    ```suxarray``` is actively being developed, and the API may change frequently.
+    ``suxarray`` is actively being developed, and ``uxarray`` that ``suxarray`` depends on change rapidly, too. Hence, API may change frequently. It is recommended to use a specific version of ``suxarray`` and ``uxarray`` together to avoid incompatibility issues, and document the versions of the ``suxarray`` and ``uxarray`` that you use in your project later use.
 
 
 Installation
