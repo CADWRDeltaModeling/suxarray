@@ -1,0 +1,10 @@
+suxarray.io package
+===================
+
+Module contents
+---------------
+
+.. automodule:: suxarray.io
+   :members:
+   :show-inheritance:
+   :undoc-members:
