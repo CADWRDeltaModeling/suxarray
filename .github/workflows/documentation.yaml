@@ -8,9 +8,12 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out suxarray
-        uses: actions/checkout@v4
+      - name: Clone the whole repository
+        uses: GuillaumeFalourd/clone-github-repo-action@v2.3
         with:
+          branch: main
+          owner: cadwrdeltamodeling
+          repository: suxarray
           path: ./suxarray
       - uses: actions/setup-python@v5
         with:
