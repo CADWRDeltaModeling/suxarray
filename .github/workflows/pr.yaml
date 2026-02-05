@@ -1,7 +1,7 @@
 # Copied from https://coderefinery.github.io/documentation/gh_workflow/ and
 # modified to use the GitHub Actions sphinx-build action
 name: docs
-on: [push, workflow_dispatch]
+on: [pull_request]
 permissions:
   contents: write
 jobs:
@@ -25,11 +25,3 @@ jobs:
           sphinx-apidoc -o docs suxarray
           sphinx-versioned --output docs/_build --local-conf docs/conf.py --branch "main" --main-branch "main"
         working-directory: ./suxarray
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3.9.2
-        # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        with:
-          publish_branch: gh-pages
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./suxarray/docs/_build
-          force_orphan: true
