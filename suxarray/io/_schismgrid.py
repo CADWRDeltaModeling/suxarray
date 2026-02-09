@@ -55,6 +55,12 @@ def _read_schism_grid(
     # Use uxarray _read_ugrid to remap the dimensions
     # Note that it does not update the grid_topology information though
     # variable names are updated.
+
+    # Note, as of uxarray==2025.9.0 _read_ugrid does not correctly rename the
+    # n_edge dimension to nSCHISM_hgrid_edge, which causes issues with the isel
+    # method. This is a temporary patch to rename the dimensions back to n_edge,
+    # n_face, and n_node after reading the grid. This will need to be removed
+    # once the issue is fixed in uxarray.
     ds_out2d, dim_dict = _read_ugrid(ds_out2d)
 
     ds_out2d = _rename_coords(ds_out2d)
@@ -205,7 +211,7 @@ def _transform_coordinates(
 
 
 def _rename_coords(
-    data: Union[xr.DataArray, xr.Dataset]
+    data: Union[xr.DataArray, xr.Dataset],
 ) -> Union[xr.DataArray, xr.Dataset]:
     if SCHISM_CARTESIAN_NODE_COORDINATES[0] in data:
         coord_dict = {
@@ -225,11 +231,19 @@ def _rename_coords(
             SCHISM_CARTESIAN_FACE_COORDINATES[1]: CARTESIAN_FACE_COORDINATES[1],
         }
         data = data.rename(coord_dict)
+    # Patch for dimension name renaming.
+    if "nSCHISM_hgrid_edge" in data.dims:
+        data = data.rename({"nSCHISM_hgrid_edge": "n_edge"})
+    if "nSCHISM_hgrid_face" in data.dims:
+        data = data.rename({"nSCHISM_hgrid_face": "n_face"})
+    if "nSCHISM_hgrid_node" in data.dims:
+        data = data.rename({"nSCHISM_hgrid_node": "n_node"})
+
     return data
 
 
 def _rename_coords_back(
-    data: Union[xr.DataArray, xr.Dataset]
+    data: Union[xr.DataArray, xr.Dataset],
 ) -> Union[xr.DataArray, xr.Dataset]:
     if CARTESIAN_NODE_COORDINATES[0] in data.coords:
         coord_dict = {
