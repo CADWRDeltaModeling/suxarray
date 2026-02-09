@@ -18,6 +18,14 @@ class SxDataArray(uxarray.UxDataArray):
         if sxgrid is not None and not isinstance(sxgrid, Grid):
             raise RuntimeError("sxgrid must be a Grid object")
 
+        # temporary fix to avoid passing uxgrid to parent class through kwargs.
+        if "uxgrid" in kwargs:  # check if uxgrid is in kwargs
+            if isinstance(kwargs["uxgrid"], Grid):  # type check
+                sxgrid = kwargs["uxgrid"]  # assign to sxgrid
+                kwargs.pop(
+                    "uxgrid"
+                )  # remove uxgrid from kwargs to avoid passing it to parent class
+
         super().__init__(*args, uxgrid=sxgrid, **kwargs)
 
     subset = UncachedAccessor(DataArraySubsetAccessor)
@@ -31,7 +39,6 @@ class SxDataArray(uxarray.UxDataArray):
         if not ignore_grid and self.uxgrid.sgrid_info is not None:
             da_new.uxgrid = da_new.uxgrid.sgrid_isel(**kwargs)
         return da_new
-
 
     def depth_average(self) -> SxDataArray:
         """Calculate depth-average of a variable
