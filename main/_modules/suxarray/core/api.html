@@ -1,0 +1,517 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>suxarray.core.api &mdash; suxarray 2025.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=ebac260a"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            suxarray
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Suxarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">suxarray</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">suxarray.core.api</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for suxarray.core.api</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uxarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ux</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">Grid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.core.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">SxDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.core.dataarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">SxDataArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.io._schismgrid</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_transform_coordinates</span><span class="p">,</span>
+    <span class="n">_rename_dims_back</span><span class="p">,</span>
+    <span class="n">_rename_coords_back</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.conventions.schism_grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCHISM_GRID_TIME_VARIABLES_IN_OUT2D</span>
+
+
+<div class="viewcode-block" id="read_schism_nc">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.read_schism_nc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_schism_nc</span><span class="p">(</span><span class="n">grid</span><span class="p">:</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">ds_data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SxDataset</span><span class="p">:</span>
+    <span class="n">ds_data</span> <span class="o">=</span> <span class="n">ux</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_map_dims_to_ugrid</span><span class="p">(</span><span class="n">ds_data</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">_source_dims_dict</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;nSCHISM_vgrid_layers&quot;</span> <span class="ow">in</span> <span class="n">ds_data</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+        <span class="n">ds_data</span> <span class="o">=</span> <span class="n">ds_data</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">({</span><span class="s2">&quot;nSCHISM_vgrid_layers&quot;</span><span class="p">:</span> <span class="s2">&quot;n_layer&quot;</span><span class="p">})</span>
+    <span class="n">sxds</span> <span class="o">=</span> <span class="n">SxDataset</span><span class="p">(</span><span class="n">ds_data</span><span class="p">,</span> <span class="n">sxgrid</span><span class="o">=</span><span class="n">grid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sxds</span></div>
+
+
+
+<div class="viewcode-block" id="read_grid">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.read_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_grid</span><span class="p">(</span><span class="n">ds_out2d</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ds_zcoords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read grid information from xarray datasets and return a suxarray grid</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds_out2d : xr.Dataset</span>
+<span class="sd">        Dataset containing SCHISM out2d-like information</span>
+<span class="sd">    ds_zcoords : xr.Dataset, optional</span>
+<span class="sd">        Dataset containing SCHISM z-coordinate like information</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `suxarray.Grid`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Uxarray expects lat-lon coordinates. Convert coordinates into global</span>
+    <span class="c1"># geographic coordinates.</span>
+    <span class="n">ds_out2d_latlon</span> <span class="o">=</span> <span class="n">_transform_coordinates</span><span class="p">(</span><span class="n">ds_out2d</span><span class="p">)</span>
+    <span class="n">sxgrid</span> <span class="o">=</span> <span class="n">Grid</span><span class="o">.</span><span class="n">from_dataset</span><span class="p">(</span><span class="n">ds_out2d_latlon</span><span class="p">,</span> <span class="n">ds_zcoords</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sxgrid</span></div>
+
+
+
+<div class="viewcode-block" id="open_grid">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.open_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">open_grid</span><span class="p">(</span>
+    <span class="n">files_out2d</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">],</span>
+    <span class="n">files_zcoords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chunks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open SCHISM out2d and zCoordinates files and return a grid object</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    files_out2d : str, os.PathLike, list, tuple</span>
+<span class="sd">        SCHISM out2d files</span>
+<span class="sd">    files_zcoords : str, os.PathLike, list, tuple</span>
+<span class="sd">        SCHISM zCoordinates files</span>
+<span class="sd">    chunks : dict, optional</span>
+<span class="sd">        Chunks for dask</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `suxarray.Grid`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># if chunks is None:</span>
+    <span class="c1">#     chunks = {</span>
+    <span class="c1">#         &quot;time&quot;: 12,</span>
+    <span class="c1">#     }</span>
+    <span class="n">ds_out2d</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span>
+        <span class="n">files_out2d</span><span class="p">,</span>
+        <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;netcdf4&quot;</span><span class="p">,</span>
+        <span class="n">mask_and_scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span>
+        <span class="n">preprocess</span><span class="o">=</span><span class="k">lambda</span> <span class="n">ds</span><span class="p">:</span> <span class="n">ds</span><span class="p">[</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;SCHISM_hgrid&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_node_x&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_node_y&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_face_x&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_face_y&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_edge_x&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_edge_y&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;bottom_index_node&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_face_nodes&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SCHISM_hgrid_edge_nodes&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;dryFlagNode&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;dryFlagElement&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;dryFlagSide&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">],</span>
+        <span class="c1"># join=&quot;override&quot;,</span>
+        <span class="n">data_vars</span><span class="o">=</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span>
+        <span class="n">compat</span><span class="o">=</span><span class="s2">&quot;override&quot;</span><span class="p">,</span>
+        <span class="n">coords</span><span class="o">=</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">files_zcoords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ds_zcoords</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span>
+            <span class="n">files_zcoords</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;netcdf4&quot;</span><span class="p">,</span>
+            <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span>
+            <span class="n">join</span><span class="o">=</span><span class="s2">&quot;override&quot;</span><span class="p">,</span>
+            <span class="n">coords</span><span class="o">=</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span>
+            <span class="n">data_vars</span><span class="o">=</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span>
+            <span class="n">compat</span><span class="o">=</span><span class="s2">&quot;override&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ds_zcoords</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">sxgrid</span> <span class="o">=</span> <span class="n">read_grid</span><span class="p">(</span><span class="n">ds_out2d</span><span class="p">,</span> <span class="n">ds_zcoords</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sxgrid</span></div>
+
+
+
+<div class="viewcode-block" id="open_hgrid_gr3">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.open_hgrid_gr3">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">open_hgrid_gr3</span><span class="p">(</span><span class="n">path_hgrid</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read SCHISM hgrid.gr3 file and return a suxarray grid</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># read the header</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_hgrid</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">n_faces</span><span class="p">,</span> <span class="n">n_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">2</span><span class="p">]]</span>
+
+    <span class="c1"># Read the node section. Read only up to the fourth column</span>
+    <span class="n">df_nodes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+        <span class="n">path_hgrid</span><span class="p">,</span>
+        <span class="n">skiprows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nrows</span><span class="o">=</span><span class="n">n_nodes</span><span class="p">,</span>
+        <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span>
+        <span class="n">usecols</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Read the face section. Read only up to the sixth column. The last column</span>
+    <span class="c1"># may exist or not.</span>
+    <span class="n">df_faces</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+        <span class="n">path_hgrid</span><span class="p">,</span>
+        <span class="n">skiprows</span><span class="o">=</span><span class="mi">2</span> <span class="o">+</span> <span class="n">n_nodes</span><span class="p">,</span>
+        <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nrows</span><span class="o">=</span><span class="n">n_faces</span><span class="p">,</span>
+        <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span>
+        <span class="n">names</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Create suxarray grid</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;SCHISM_hgrid_node_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df_nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;nSCHISM_hgrid_node&quot;</span><span class="p">,</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;standard_name&quot;</span><span class="p">:</span> <span class="s2">&quot;projection_x_coordinate&quot;</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;SCHISM_hgrid_node_y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df_nodes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+        <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;nSCHISM_hgrid_node&quot;</span><span class="p">,</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;standard_name&quot;</span><span class="p">:</span> <span class="s2">&quot;projection_y_coordinate&quot;</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="c1"># ds = _transform_coordinates(ds)</span>
+
+    <span class="c1"># Replace NaN with -1</span>
+    <span class="n">df_faces</span> <span class="o">=</span> <span class="n">df_faces</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;SCHISM_hgrid_face_nodes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df_faces</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;nSCHISM_hgrid_face&quot;</span><span class="p">,</span> <span class="s2">&quot;nMaxSCHISM_hgrid_face_nodes&quot;</span><span class="p">),</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;start_index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;cf_role&quot;</span><span class="p">:</span> <span class="s2">&quot;face_node_connectivity&quot;</span><span class="p">,</span> <span class="s2">&quot;_FillValue&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="c1"># ds[&quot;depth&quot;] = df_nodes[3].values</span>
+    <span class="n">da_topology</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;SCHISM_hgrid&quot;</span><span class="p">)</span>
+    <span class="n">da_topology</span> <span class="o">=</span> <span class="n">da_topology</span><span class="o">.</span><span class="n">assign_attrs</span><span class="p">(</span>
+        <span class="n">long_name</span><span class="o">=</span><span class="s2">&quot;Topology data of 2d unstructured mesh&quot;</span><span class="p">,</span>
+        <span class="n">topology_dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">cf_role</span><span class="o">=</span><span class="s2">&quot;mesh_topology&quot;</span><span class="p">,</span>
+        <span class="n">node_coordinates</span><span class="o">=</span><span class="s2">&quot;SCHISM_hgrid_node_x SCHISM_hgrid_node_y&quot;</span><span class="p">,</span>
+        <span class="c1"># edge_coordinates=&quot;SCHISM_hgrid_edge_x SCHISM_hgrid_edge_y&quot;,</span>
+        <span class="c1"># face_coordinates=&quot;SCHISM_hgrid_face_x SCHISM_hgrid_face_y&quot;,</span>
+        <span class="c1"># edge_node_connectivity=&quot;SCHISM_hgrid_edge_nodes&quot;,</span>
+        <span class="n">face_node_connectivity</span><span class="o">=</span><span class="s2">&quot;SCHISM_hgrid_face_nodes&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;SCHISM_hgrid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">da_topology</span>
+
+    <span class="c1"># grid = Grid.from_dataset(ds, ds_zcoords=None)</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">read_grid</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">grid</span></div>
+
+
+
+<div class="viewcode-block" id="write_schism_grid">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.write_schism_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_schism_grid</span><span class="p">(</span>
+    <span class="n">grid</span><span class="p">:</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">file_gridout</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span class="n">da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a SCHISM grid to a NetCDF file</span>
+
+<span class="sd">    The goal of this function is to write a SCHISM grid information to a NetCDF</span>
+<span class="sd">    file that can be understood by SCHISM VisIt plugin.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_gridout : str or Path</span>
+<span class="sd">        Path to the output NetCDF file</span>
+<span class="sd">    grid : Grid</span>
+<span class="sd">        SCHISM grid object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span>
+
+    <span class="c1"># Update the face and edge connectivity to start from 1</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;face_node_connectivity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">xr</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">face_node_connectivity</span> <span class="o">==</span> <span class="n">ds</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">_FillValue</span><span class="p">,</span>
+            <span class="o">-</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="p">,</span>
+            <span class="n">keep_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;edge_node_connectivity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">edge_node_connectivity</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">ds</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;start_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">ds</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;_FillValue&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">ds</span><span class="o">.</span><span class="n">edge_node_connectivity</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;start_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Rename variables to SCHISM specific names</span>
+    <span class="n">varnames_to_swap</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;node_x&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_node_x&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;node_y&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_node_y&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edge_x&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_edge_x&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edge_y&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_edge_y&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;face_x&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_face_x&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;face_y&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_face_y&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;face_node_connectivity&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_face_nodes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edge_node_connectivity&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_edge_nodes&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Bring back time-varying grid information</span>
+    <span class="k">for</span> <span class="n">varname</span> <span class="ow">in</span> <span class="n">SCHISM_GRID_TIME_VARIABLES_IN_OUT2D</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">varname</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="p">:</span>
+            <span class="n">ds</span><span class="p">[</span><span class="n">varname</span><span class="p">]</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="p">[</span><span class="n">varname</span><span class="p">]</span>
+
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">varnames_to_swap</span><span class="p">)</span>
+
+    <span class="c1"># If a dataarray is provided, add it to the out2d, or grid</span>
+    <span class="k">if</span> <span class="n">da</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ds</span><span class="p">[</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">da</span>
+
+    <span class="c1"># Switch back to SCHISM dimension names</span>
+    <span class="n">dims_to_swap</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;n_node&quot;</span><span class="p">:</span> <span class="s2">&quot;nSCHISM_hgrid_node&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;n_face&quot;</span><span class="p">:</span> <span class="s2">&quot;nSCHISM_hgrid_face&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;n_edge&quot;</span><span class="p">:</span> <span class="s2">&quot;nSCHISM_hgrid_edge&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;n_max_face_nodes&quot;</span><span class="p">:</span> <span class="s2">&quot;nMaxSCHISM_hgrid_face_nodes&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">(</span><span class="n">dims_to_swap</span><span class="p">)</span>
+
+    <span class="c1"># Remove variables that we do not want.</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;face_lon&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;face_lat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;edge_lon&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;edge_lat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;node_lon&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;node_lat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;grid_topology&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Add back the SCHISM grid topology information</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;SCHISM_hgrid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;SCHISM_hgrid&quot;</span><span class="p">,</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Topology data of 2d unstructured mesh&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;topology_dimension&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+            <span class="s2">&quot;cf_role&quot;</span><span class="p">:</span> <span class="s2">&quot;mesh_topology&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;node_coordinates&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_node_x SCHISM_hgrid_node_y&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;edge_coordinates&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_edge_x SCHISM_hgrid_edge_y&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;face_coordinates&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_face_x SCHISM_hgrid_face_y&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;edge_node_connectivity&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_edge_nodes&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;face_node_connectivity&quot;</span><span class="p">:</span> <span class="s2">&quot;SCHISM_hgrid_face_nodes&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="c1"># If the grid dataset does not have n_layers dim, add a dummy variable to</span>
+    <span class="c1"># keep it.</span>
+    <span class="k">if</span> <span class="s2">&quot;n_layer&quot;</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;dummy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">n_layer</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;nSCHISM_vgrid_layers&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;dummy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;nSCHISM_vgrid_layers&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ds.to_netcdf(file_gridout)</span>
+    <span class="n">days</span><span class="p">,</span> <span class="n">datasets</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">ds</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="s2">&quot;1D&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">))</span>
+    <span class="n">path_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;out2d_</span><span class="si">{</span><span class="n">day</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">.nc&quot;</span> <span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">days</span><span class="p">))]</span>
+    <span class="n">xr</span><span class="o">.</span><span class="n">save_mfdataset</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">path_outputs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_schism_nc">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.write_schism_nc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_schism_nc</span><span class="p">(</span>
+    <span class="n">sxda</span><span class="p">:</span> <span class="n">SxDataArray</span><span class="p">,</span> <span class="n">file_dataout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a SCHISM data array to NetCDF files</span>
+
+<span class="sd">    NOTE: WIP. The API is not finalized.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sxda : SxDataset</span>
+<span class="sd">        SCHISM data array</span>
+<span class="sd">    file_dataout : str or Path, optional</span>
+<span class="sd">        Path to the output NetCDF file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;n_layer&quot;</span> <span class="ow">in</span> <span class="n">sxda</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+        <span class="c1"># TODO Hardcoded file name</span>
+        <span class="n">files_out2d</span> <span class="o">=</span> <span class="s2">&quot;out2d_1.nc&quot;</span>
+        <span class="n">write_schism_grid</span><span class="p">(</span><span class="n">sxda</span><span class="o">.</span><span class="n">sxgrid</span><span class="p">,</span> <span class="n">files_out2d</span><span class="p">)</span>
+
+        <span class="c1"># zCoordinates</span>
+        <span class="k">if</span> <span class="s2">&quot;zCoordinates&quot;</span> <span class="ow">in</span> <span class="n">sxda</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="p">:</span>
+            <span class="c1"># TODO Hardcoded file name for now</span>
+            <span class="c1"># file_zcoords = &quot;zCoordinates_1.nc&quot;</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">_rename_dims_back</span><span class="p">(</span><span class="n">sxda</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">zCoordinates</span><span class="p">)</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">_rename_coords_back</span><span class="p">(</span><span class="n">da</span><span class="p">)</span>
+            <span class="c1"># da.to_netcdf(file_zcoords)</span>
+            <span class="n">days</span><span class="p">,</span> <span class="n">datasets</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">da</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">()</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="s2">&quot;1D&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">))</span>
+            <span class="n">path_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;zCoordinates_</span><span class="si">{</span><span class="n">day</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">.nc&quot;</span> <span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">days</span><span class="p">))]</span>
+            <span class="n">xr</span><span class="o">.</span><span class="n">save_mfdataset</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">path_outputs</span><span class="p">)</span>
+
+        <span class="c1"># TODO Hardcoded file name for now</span>
+        <span class="c1"># file_dataout = f&quot;{sxda.name}_1.nc&quot;</span>
+        <span class="n">da</span> <span class="o">=</span> <span class="n">_rename_dims_back</span><span class="p">(</span><span class="n">sxda</span><span class="p">)</span>
+        <span class="n">da</span> <span class="o">=</span> <span class="n">_rename_coords_back</span><span class="p">(</span><span class="n">da</span><span class="p">)</span>
+        <span class="c1"># da.to_netcdf(file_dataout)</span>
+        <span class="n">days</span><span class="p">,</span> <span class="n">datasets</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">da</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">()</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="s2">&quot;1D&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">))</span>
+        <span class="n">path_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sxda</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">day</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">.nc&quot;</span> <span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">days</span><span class="p">))]</span>
+        <span class="n">xr</span><span class="o">.</span><span class="n">save_mfdataset</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">path_outputs</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># TODO Hardcoded file name</span>
+        <span class="n">files_out2d</span> <span class="o">=</span> <span class="s2">&quot;out2d_1.nc&quot;</span>
+        <span class="n">write_schism_grid</span><span class="p">(</span><span class="n">sxda</span><span class="o">.</span><span class="n">sxgrid</span><span class="p">,</span> <span class="n">files_out2d</span><span class="p">,</span> <span class="n">sxda</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="write_gr3">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.write_gr3">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_gr3</span><span class="p">(</span>
+    <span class="n">sxda</span><span class="p">:</span> <span class="n">SxDataArray</span><span class="p">,</span>
+    <span class="n">file_gr3</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
+    <span class="n">fill_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">9999.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a SCHISM grid to a gr3 file</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sxda : SxDataArray</span>
+<span class="sd">        SCHISM data array to write out</span>
+<span class="sd">    file_gr3 : str or Path</span>
+<span class="sd">        Path to the output gr3 file</span>
+<span class="sd">    fill_value : float, optional</span>
+<span class="sd">        Fill value to use for missing values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">varname</span> <span class="o">=</span> <span class="n">sxda</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">sxda</span><span class="o">.</span><span class="n">sxgrid</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_gr3</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">varname</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">n_node</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># TODO Need to check the dimension...</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">sxda</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span> <span class="o">=</span> <span class="n">fill_value</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;node_index&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">n_node</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">grid</span><span class="o">.</span><span class="n">node_x</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">grid</span><span class="o">.</span><span class="n">node_y</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">values</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_gr3</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+    <span class="c1"># Connectivity</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+            <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;n_nodes&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+            <span class="s2">&quot;node1&quot;</span><span class="p">:</span> <span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;node2&quot;</span><span class="p">:</span> <span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;node3&quot;</span><span class="p">:</span> <span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;node4&quot;</span><span class="p">:</span> <span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_gr3</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2025, California Department of Water Resources.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

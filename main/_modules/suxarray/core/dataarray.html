@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>suxarray.core.dataarray &mdash; suxarray 2025.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=ebac260a"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            suxarray
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Suxarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">suxarray</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">suxarray.core.dataarray</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for suxarray.core.dataarray</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">UncachedAccessor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uxarray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Point</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">Grid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.subset</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataArraySubsetAccessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.utils.computing</span><span class="w"> </span><span class="kn">import</span> <span class="n">_depth_average</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.grid.area</span><span class="w"> </span><span class="kn">import</span> <span class="n">_integrate_nodal</span>
+
+
+<div class="viewcode-block" id="SxDataArray">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.SxDataArray">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SxDataArray</span><span class="p">(</span><span class="n">uxarray</span><span class="o">.</span><span class="n">UxDataArray</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sxgrid</span><span class="p">:</span> <span class="n">Grid</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sxgrid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sxgrid</span><span class="p">,</span> <span class="n">Grid</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;sxgrid must be a Grid object&quot;</span><span class="p">)</span>
+
+        <span class="c1"># temporary fix to avoid passing uxgrid to parent class through kwargs.</span>
+        <span class="k">if</span> <span class="s2">&quot;uxgrid&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>  <span class="c1"># check if uxgrid is in kwargs</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;uxgrid&quot;</span><span class="p">],</span> <span class="n">Grid</span><span class="p">):</span>  <span class="c1"># type check</span>
+                <span class="n">sxgrid</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;uxgrid&quot;</span><span class="p">]</span>  <span class="c1"># assign to sxgrid</span>
+                <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+                    <span class="s2">&quot;uxgrid&quot;</span>
+                <span class="p">)</span>  <span class="c1"># remove uxgrid from kwargs to avoid passing it to parent class</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">uxgrid</span><span class="o">=</span><span class="n">sxgrid</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">subset</span> <span class="o">=</span> <span class="n">UncachedAccessor</span><span class="p">(</span><span class="n">DataArraySubsetAccessor</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sxgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">uxgrid</span>
+
+<div class="viewcode-block" id="SxDataArray.isel">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.SxDataArray.isel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">da_new</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">ignore_grid</span><span class="o">=</span><span class="n">ignore_grid</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_grid</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">uxgrid</span><span class="o">.</span><span class="n">sgrid_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">da_new</span><span class="o">.</span><span class="n">uxgrid</span> <span class="o">=</span> <span class="n">da_new</span><span class="o">.</span><span class="n">uxgrid</span><span class="o">.</span><span class="n">sgrid_isel</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">da_new</span></div>
+
+
+<div class="viewcode-block" id="SxDataArray.depth_average">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.SxDataArray.depth_average">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">depth_average</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SxDataArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate depth-average of a variable</span>
+
+<span class="sd">        This may need to be moved to a separate file.</span>
+<span class="sd">        TODO: Currently this assumes nodal values. Need to support other `element`.</span>
+<span class="sd">        TODO: Maybe this can be moved to another file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        da : SxDataArray</span>
+<span class="sd">            Depth averaged variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">bottom_index_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">bottom_index_node</span>
+        <span class="n">dry_flag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">dryFlagNode</span>
+        <span class="n">zcoords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">zCoordinates</span>
+
+        <span class="n">da_da</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">apply_ufunc</span><span class="p">(</span>
+            <span class="n">_depth_average</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">zcoords</span><span class="p">,</span>
+            <span class="n">bottom_index_node</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">dry_flag_node</span><span class="p">,</span>
+            <span class="n">input_core_dims</span><span class="o">=</span><span class="p">[</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;n_layer&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;n_layer&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="p">[],</span>
+                <span class="p">[],</span>
+            <span class="p">],</span>
+            <span class="n">dask</span><span class="o">=</span><span class="s2">&quot;parallelized&quot;</span><span class="p">,</span>
+            <span class="n">output_dtypes</span><span class="o">=</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;depth_averaged_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">SxDataArray</span><span class="p">(</span><span class="n">da_da</span><span class="p">,</span> <span class="n">sxgrid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SxDataArray.integrate">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.SxDataArray.integrate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">integrate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">quadrature_rule</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;triangular&quot;</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SxDataArray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">n_face</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">quadrature_rule</span><span class="o">=</span><span class="n">quadrature_rule</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">n_edge</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integrate is not supported for edge values&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">n_node</span><span class="p">:</span>
+            <span class="c1"># If there is a vertical dimension, n_layer, raise an error for now</span>
+            <span class="k">if</span> <span class="s2">&quot;n_layer&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integrate is not supported for 3D nodal values yet.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">integral</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">apply_ufunc</span><span class="p">(</span>
+                    <span class="n">_integrate_nodal</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">node_x</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">node_y</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="p">,</span>
+                    <span class="n">input_core_dims</span><span class="o">=</span><span class="p">[</span>
+                        <span class="p">[</span>
+                            <span class="s2">&quot;n_node&quot;</span><span class="p">,</span>
+                        <span class="p">],</span>
+                        <span class="p">[</span>
+                            <span class="s2">&quot;n_node&quot;</span><span class="p">,</span>
+                        <span class="p">],</span>
+                        <span class="p">[</span>
+                            <span class="s2">&quot;n_node&quot;</span><span class="p">,</span>
+                        <span class="p">],</span>
+                        <span class="p">[</span>
+                            <span class="s2">&quot;n_face&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;n_max_face_nodes&quot;</span><span class="p">,</span>
+                        <span class="p">],</span>
+                    <span class="p">],</span>
+                    <span class="n">output_core_dims</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;n_face&quot;</span><span class="p">]],</span>
+                    <span class="n">output_dtypes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                    <span class="n">dask</span><span class="o">=</span><span class="s2">&quot;parallelized&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;n_face&quot;</span><span class="p">,)</span>
+            <span class="n">sxda</span> <span class="o">=</span> <span class="n">SxDataArray</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="n">sxgrid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">sxda</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;None of dimensions match the grid information&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2025, California Department of Water Resources.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

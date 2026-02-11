@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>suxarray.grid.grid &mdash; suxarray 2025.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=ebac260a"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            suxarray
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Suxarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">suxarray</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">suxarray.grid.grid</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for suxarray.grid.grid</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uxarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ux</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">UncachedAccessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.io._schismgrid</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_schism_grid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.subset</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSubsetAccessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.grid.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">STRTree</span>
+
+
+<div class="viewcode-block" id="Grid">
+<a class="viewcode-back" href="../../../suxarray.grid.html#suxarray.Grid">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Grid</span><span class="p">(</span><span class="n">ux</span><span class="o">.</span><span class="n">Grid</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;uxarray Grid class for SCHISM</span>
+<span class="sd">    See uxarray Grid documentation for the details of the methods and properties</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    TBD</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">grid_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ux</span><span class="o">.</span><span class="n">Grid</span><span class="p">],</span>
+        <span class="n">ds_sgrid_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">source_grid_spec</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;UGRID&quot;</span><span class="p">,</span>
+        <span class="n">source_dims_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a Grid object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid_odj : xarray.Dataset or uxarray.Grid</span>
+<span class="sd">            Grid dataset</span>
+<span class="sd">        ds_sgrid_info : xarray.Dataset, optional</span>
+<span class="sd">            SCHISM grid information dataset</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        source_grid_spec: str, optional</span>
+<span class="sd">            Specifies gridspec</span>
+<span class="sd">        source_dims_dict: dict, optional</span>
+<span class="sd">            source dim dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Initialize the super class</span>
+        <span class="n">source_grid_spec</span> <span class="o">=</span> <span class="s2">&quot;UGRID&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_face_polygons</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_face_strtree</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_points</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_strtree</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_edge_strtree</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sgrid_info</span> <span class="o">=</span> <span class="n">ds_sgrid_info</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grid_obj</span><span class="p">,</span> <span class="n">ux</span><span class="o">.</span><span class="n">Grid</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">grid_obj</span><span class="o">.</span><span class="n">_ds</span><span class="p">,</span>
+                <span class="n">source_grid_spec</span><span class="o">=</span><span class="n">source_grid_spec</span><span class="p">,</span>
+                <span class="n">source_dims_dict</span><span class="o">=</span><span class="n">source_dims_dict</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grid_obj</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">grid_obj</span><span class="p">,</span>
+                <span class="n">source_grid_spec</span><span class="o">=</span><span class="n">source_grid_spec</span><span class="p">,</span>
+                <span class="n">source_dims_dict</span><span class="o">=</span><span class="n">source_dims_dict</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;grid_ds must be xarray.Dataset or suxarray.Grid&quot;</span><span class="p">)</span>
+
+    <span class="n">subset</span> <span class="o">=</span> <span class="n">UncachedAccessor</span><span class="p">(</span><span class="n">GridSubsetAccessor</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Grid.from_dataset">
+<a class="viewcode-back" href="../../../suxarray.grid.html#suxarray.Grid.from_dataset">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dataset</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ds_out2d</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ds_zcoords</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a Grid object from a SCHISM output 2D dataset and a z-coordinate dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_out2d : xr.Dataset</span>
+<span class="sd">            SCHISM output 2D dataset</span>
+<span class="sd">        ds_sgrid_info : xr.Dataset, optional</span>
+<span class="sd">            Extra SCHISM grid information</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Grid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_grid_spec</span> <span class="o">=</span> <span class="s2">&quot;UGRID&quot;</span>
+        <span class="n">ds_grid</span><span class="p">,</span> <span class="n">ds_sgrid_info</span> <span class="o">=</span> <span class="n">_read_schism_grid</span><span class="p">(</span><span class="n">ds_out2d</span><span class="p">,</span> <span class="n">ds_zcoords</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">ds_grid</span><span class="p">,</span> <span class="n">ds_sgrid_info</span><span class="p">,</span> <span class="n">source_grid_spec</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sgrid_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sgrid_info</span>
+
+    <span class="nd">@sgrid_info</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sgrid_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sgrid_info</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sgrid_info</span> <span class="o">=</span> <span class="n">sgrid_info</span>
+
+<div class="viewcode-block" id="Grid.isel">
+<a class="viewcode-back" href="../../../suxarray.grid.html#suxarray.Grid.isel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">dim_kwargs</span><span class="p">):</span>
+        <span class="c1"># Because uxarray Grid calls external methods, isel below will not return</span>
+        <span class="c1"># Suxarray Grid object. It needs to be cast.</span>
+        <span class="n">grid_new</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="o">**</span><span class="n">dim_kwargs</span><span class="p">)</span>
+        <span class="n">sgrid_new</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">grid_new</span><span class="p">,</span> <span class="n">ds_sgrid_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sgrid_info</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sgrid_info</span><span class="p">:</span>
+            <span class="n">sgrid_new</span> <span class="o">=</span> <span class="n">sgrid_new</span><span class="o">.</span><span class="n">sgrid_isel</span><span class="p">(</span><span class="o">**</span><span class="n">dim_kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sgrid_new</span></div>
+
+
+<div class="viewcode-block" id="Grid.sgrid_isel">
+<a class="viewcode-back" href="../../../suxarray.grid.html#suxarray.Grid.sgrid_isel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sgrid_isel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">uxarray.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">GRID_DIMS</span>
+
+        <span class="n">kwargs_no_grid_dim</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">GRID_DIMS</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">kwargs_no_grid_dim</span><span class="p">:</span>
+            <span class="n">sgrid_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">kwargs_no_grid_dim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sgrid_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Need to subset (or slice) sgrid_info</span>
+        <span class="k">if</span> <span class="s2">&quot;subgrid_node_indices&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds</span><span class="p">:</span>
+            <span class="n">sgrid_info</span> <span class="o">=</span> <span class="n">sgrid_info</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span>
+                <span class="n">n_node</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ds</span><span class="p">[</span><span class="s2">&quot;subgrid_node_indices&quot;</span><span class="p">],</span>
+                <span class="n">n_face</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ds</span><span class="p">[</span><span class="s2">&quot;subgrid_face_indices&quot;</span><span class="p">],</span>
+                <span class="c1"># n_edge=self._ds[&quot;subgrid_edge_indices&quot;],</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_sgrid_info</span><span class="o">=</span><span class="n">sgrid_info</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Grid.get_strtree">
+<a class="viewcode-back" href="../../../suxarray.grid.html#suxarray.Grid.get_strtree">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_strtree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;nodes&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="s2">&quot;nodes&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_strtree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_node_strtree</span> <span class="o">=</span> <span class="n">STRTree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="s2">&quot;nodes&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_strtree</span>
+        <span class="k">elif</span> <span class="n">elements</span> <span class="o">==</span> <span class="s2">&quot;faces&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_face_strtree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_face_strtree</span> <span class="o">=</span> <span class="n">STRTree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="s2">&quot;faces&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_face_strtree</span>
+        <span class="k">elif</span> <span class="n">elements</span> <span class="o">==</span> <span class="s2">&quot;edges&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_strtree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_edge_strtree</span> <span class="o">=</span> <span class="n">STRTree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="s2">&quot;edges&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_strtree</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Coordinates must be one of &#39;nodes&#39;, &#39;faces&#39;, or &#39;edges&#39;.&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Grid.intersect">
+<a class="viewcode-back" href="../../../suxarray.grid.html#suxarray.Grid.intersect">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intersect</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">geometry</span><span class="p">:</span> <span class="n">shapely</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">BaseGeometry</span><span class="p">,</span>
+        <span class="n">element</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;faces&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find intersecting elements with a Shapely geometry</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        geometry: shapely.geometry.Geometry</span>
+<span class="sd">        element: str, optional</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Indices of intersecting elements</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">element</span> <span class="o">==</span> <span class="s2">&quot;faces&quot;</span><span class="p">:</span>
+            <span class="n">strtree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_strtree</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="n">element</span><span class="p">)</span>
+            <span class="n">face_ilocs</span> <span class="o">=</span> <span class="n">strtree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="s2">&quot;intersects&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">face_ilocs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span></div>
+</div>
+
+
+    <span class="c1"># def read_vgrid(self, path_vgrid):</span>
+    <span class="c1">#     &quot;&quot;&quot;Read a SCHISM vgrid file&quot;&quot;&quot;</span>
+    <span class="c1">#     with open(path_vgrid, &quot;r&quot;) as f:</span>
+    <span class="c1">#         ivcor = int(f.readline().strip())</span>
+    <span class="c1">#         if ivcor != 1:</span>
+    <span class="c1">#             raise NotImplementedError(&quot;Only ivcor=1 is implemented&quot;)</span>
+    <span class="c1">#         if ivcor == 1:</span>
+    <span class="c1">#             nvrt = int(f.readline().strip())</span>
+    <span class="c1">#     if ivcor == 1:</span>
+    <span class="c1">#         n_nodes = self.Mesh2_node_x.size</span>
+    <span class="c1">#         widths = np.full(n_nodes, 11, dtype=np.int32)</span>
+    <span class="c1">#         widths[0] = 10</span>
+    <span class="c1">#         df_nvrt = pd.read_fwf(</span>
+    <span class="c1">#             path_vgrid,</span>
+    <span class="c1">#             header=None,</span>
+    <span class="c1">#             skiprows=2,</span>
+    <span class="c1">#             nrows=1,</span>
+    <span class="c1">#             widths=widths,</span>
+    <span class="c1">#             dtype=np.int32,</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#         self.ds[&quot;nvrt&quot;] = xr.DataArray(</span>
+    <span class="c1">#             df_nvrt.values.squeeze(), dims=(&quot;nMesh2_node&quot;,)</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#         widths = np.full(n_nodes + 1, 15, dtype=np.int32)</span>
+    <span class="c1">#         widths[0] = 10</span>
+    <span class="c1">#         df_vgrid = pd.read_fwf(</span>
+    <span class="c1">#             path_vgrid,</span>
+    <span class="c1">#             header=None,</span>
+    <span class="c1">#             skiprows=3,</span>
+    <span class="c1">#             nrows=nvrt,</span>
+    <span class="c1">#             widths=[10] + [15] * n_nodes,</span>
+    <span class="c1">#             na_values=-9.0,</span>
+    <span class="c1">#             dtype=np.float32,</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#         self.ds[&quot;vgrid&quot;] = xr.DataArray(</span>
+    <span class="c1">#             df_vgrid.iloc[:, 1:].values + 1.0,</span>
+    <span class="c1">#             dims=(</span>
+    <span class="c1">#                 &quot;nSCHISM_vgrid_layers&quot;,</span>
+    <span class="c1">#                 &quot;nMesh2_node&quot;,</span>
+    <span class="c1">#             ),</span>
+    <span class="c1">#         )</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2025, California Department of Water Resources.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

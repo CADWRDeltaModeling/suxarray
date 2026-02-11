@@ -1,0 +1,21 @@
+suxarray.utils package
+======================
+
+Submodules
+----------
+
+suxarray.utils.computing module
+-------------------------------
+
+.. automodule:: suxarray.utils.computing
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: suxarray.utils
+   :members:
+   :show-inheritance:
+   :undoc-members:

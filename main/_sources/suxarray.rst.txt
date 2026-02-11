@@ -1,0 +1,34 @@
+suxarray package
+================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   suxarray.conventions
+   suxarray.core
+   suxarray.grid
+   suxarray.io
+   suxarray.subset
+   suxarray.utils
+
+Submodules
+----------
+
+suxarray.util\_vtk module
+-------------------------
+
+.. automodule:: suxarray.util_vtk
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: suxarray
+   :members:
+   :show-inheritance:
+   :undoc-members:

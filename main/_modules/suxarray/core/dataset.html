@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>suxarray.core.dataset &mdash; suxarray 2025.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=ebac260a"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            suxarray
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Suxarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">suxarray</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">suxarray.core.dataset</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for suxarray.core.dataset</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; suxarray module</span>
+
+<span class="sd">`suxarray` is a module that extends the functionality of `uxarray` for the</span>
+<span class="sd">SCHISM grid.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># from numba import njit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">UncachedAccessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Polygon</span><span class="p">,</span> <span class="n">Point</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapely.strtree</span><span class="w"> </span><span class="kn">import</span> <span class="n">STRtree</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uxarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ux</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">Grid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">suxarray.core.dataarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">SxDataArray</span>
+
+
+<div class="viewcode-block" id="SxDataset">
+<a class="viewcode-back" href="../../../suxarray.core.html#suxarray.SxDataset">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SxDataset</span><span class="p">(</span><span class="n">ux</span><span class="o">.</span><span class="n">UxDataset</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_sxgrid&quot;</span><span class="p">,)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">sxgrid</span><span class="p">:</span> <span class="n">Grid</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">source_datasets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sxgrid</span> <span class="o">=</span> <span class="n">sxgrid</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">uxgrid</span><span class="o">=</span><span class="n">sxgrid</span><span class="p">,</span> <span class="n">source_datasets</span><span class="o">=</span><span class="n">source_datasets</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ux</span><span class="o">.</span><span class="n">UxDataArray</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">SxDataArray</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">sxgrid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sxgrid</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="c1"># def face_average(self, dataarray: xr.DataArray) -&gt; xr.DataArray:</span>
+    <span class="c1">#     &quot;&quot;&quot;Calculate face average of a variable</span>
+
+    <span class="c1">#     Parameters</span>
+    <span class="c1">#     ----------</span>
+    <span class="c1">#     dataarray: xr.DataArray, required</span>
+    <span class="c1">#         Input variable</span>
+
+    <span class="c1">#     Returns</span>
+    <span class="c1">#     -------</span>
+    <span class="c1">#     da : xr.DataArray</span>
+    <span class="c1">#         Face averaged variable</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     da_result = xr.apply_ufunc(</span>
+    <span class="c1">#         face_average,</span>
+    <span class="c1">#         dataarray,</span>
+    <span class="c1">#         self.uxgrid.Mesh2_face_nodes,</span>
+    <span class="c1">#         self.uxgrid.nNodes_per_face,</span>
+    <span class="c1">#         exclude_dims=set([&quot;nMesh2_node&quot;, &quot;nMesh2_face&quot;, &quot;nMaxMesh2_face_nodes&quot;]),</span>
+    <span class="c1">#         input_core_dims=[</span>
+    <span class="c1">#             [</span>
+    <span class="c1">#                 &quot;nMesh2_node&quot;,</span>
+    <span class="c1">#             ],</span>
+    <span class="c1">#             [&quot;nMesh2_face&quot;, &quot;nMaxMesh2_face_nodes&quot;],</span>
+    <span class="c1">#             [</span>
+    <span class="c1">#                 &quot;nMesh2_face&quot;,</span>
+    <span class="c1">#             ],</span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#         output_core_dims=[</span>
+    <span class="c1">#             [</span>
+    <span class="c1">#                 &quot;nMesh2_face&quot;,</span>
+    <span class="c1">#             ],</span>
+    <span class="c1">#         ],</span>
+    <span class="c1">#         output_dtypes=[float],</span>
+    <span class="c1">#         dask_gufunc_kwargs={</span>
+    <span class="c1">#             &quot;output_sizes&quot;: {&quot;nMesh2_face&quot;: self.uxgrid.nMesh2_face}</span>
+    <span class="c1">#         },</span>
+    <span class="c1">#         dask=&quot;parallelized&quot;,</span>
+    <span class="c1">#     )</span>
+    <span class="c1">#     return da_result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sxgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sxgrid</span></div>
+
+
+
+<span class="c1"># def add_topology_variable(ds, varname=&quot;Mesh2&quot;):</span>
+<span class="c1">#     &quot;&quot;&quot;Add a dummy mesh_topology variable to a SCHISM out2d dataset</span>
+
+<span class="c1">#     Parameters</span>
+<span class="c1">#     ----------</span>
+<span class="c1">#     ds : xarray.Dataset, required</span>
+<span class="c1">#         Input SCHISM out2d xarray.Dataset</span>
+<span class="c1">#     varname : str, optional</span>
+<span class="c1">#         Name of the dummy topology variable. Default is &quot;Mesh2&quot;</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     ds = ds.assign({varname: 1})</span>
+<span class="c1">#     ds[varname].attrs[&quot;cf_role&quot;] = &quot;mesh_topology&quot;</span>
+<span class="c1">#     ds[varname].attrs[&quot;topology_dimension&quot;] = 2</span>
+<span class="c1">#     ds[varname].attrs[&quot;node_coordinates&quot;] = &quot;Mesh2_node_x Mesh2_node_y&quot;</span>
+<span class="c1">#     ds[varname].attrs[&quot;face_node_connectivity&quot;] = &quot;Mesh2_face_nodes&quot;</span>
+<span class="c1">#     ds[varname].attrs[&quot;edge_node_connectivity&quot;] = &quot;Mesh2_edge_nodes&quot;</span>
+<span class="c1">#     ds[varname].attrs[&quot;Mesh2_layers&quot;] = &quot;zCoordinates&quot;</span>
+<span class="c1">#     ds[varname].attrs[&quot;start_index&quot;] = 0</span>
+
+<span class="c1">#     return ds</span>
+
+
+<span class="c1"># # TODO separate utility functions to another file</span>
+<span class="c1"># def renumber_nodes(a, fill_value: int = None):</span>
+<span class="c1">#     if fill_value is None:</span>
+<span class="c1">#         return _renumber(a)</span>
+
+<span class="c1">#     valid = a != fill_value</span>
+<span class="c1">#     renumbered = np.full_like(a, fill_value)</span>
+<span class="c1">#     renumbered[valid] = _renumber(a[valid])</span>
+<span class="c1">#     return renumbered</span>
+
+
+<span class="c1"># def _renumber(a):</span>
+<span class="c1">#     # Taken from https://github.com/scipy/scipy/blob/v1.7.1/scipy/stats/stats.py#L8631-L8737</span>
+<span class="c1">#     # (scipy is BSD-3-Clause License)</span>
+<span class="c1">#     arr = np.ravel(np.asarray(a))</span>
+<span class="c1">#     sorter = np.argsort(arr, kind=&quot;quicksort&quot;)</span>
+<span class="c1">#     inv = np.empty(sorter.size, dtype=int)</span>
+<span class="c1">#     inv[sorter] = np.arange(sorter.size, dtype=int)</span>
+<span class="c1">#     arr = arr[sorter]</span>
+<span class="c1">#     obs = np.r_[True, arr[1:] != arr[:-1]]</span>
+<span class="c1">#     dense = obs.cumsum()[inv]</span>
+<span class="c1">#     return dense.reshape(a.shape)</span>
+
+
+<span class="c1"># def get_topology_variable(dataset: xr.Dataset) -&gt; Optional[str]:</span>
+<span class="c1">#     &quot;&quot;&quot;Get the topology xarray.DataArray</span>
+
+<span class="c1">#     Parameters</span>
+<span class="c1">#     ----------</span>
+<span class="c1">#     dataset : xarray.Dataset, required</span>
+<span class="c1">#         Input xarray.Dataset</span>
+
+<span class="c1">#     Returns</span>
+<span class="c1">#     -------</span>
+<span class="c1">#     da : xarray.DataArray</span>
+<span class="c1">#         Topology Xarray.DataArray</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     ds = dataset.filter_by_attrs(cf_role=&quot;mesh_topology&quot;)</span>
+<span class="c1">#     if len(ds) == 0:</span>
+<span class="c1">#         return None</span>
+<span class="c1">#     elif len(ds) &gt; 1:</span>
+<span class="c1">#         raise ValueError(&quot;Multiple mesh_topology variables found&quot;)</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         return ds[list(ds.keys())[0]]</span>
+
+
+<span class="c1"># def triangulate(grid):</span>
+<span class="c1">#     &quot;&quot;&quot;Triangulate a suxarray grid</span>
+
+<span class="c1">#     This function split quadrilateral elements into two triangles and returns a</span>
+<span class="c1">#     new suxarray grid. It does not consider the quality of the resulting</span>
+<span class="c1">#     triangles. The main use case of this function is to visualize the grid</span>
+<span class="c1">#     with holoviews or other plotting tools that require a triangulated grid.</span>
+
+<span class="c1">#     Parameters</span>
+<span class="c1">#     ----------</span>
+<span class="c1">#     grid : Grid, required</span>
+<span class="c1">#         Grid object to triangulate</span>
+
+<span class="c1">#     Returns</span>
+<span class="c1">#     -------</span>
+<span class="c1">#     grid : Grid</span>
+<span class="c1">#         Triangulated grid</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     mesh_name = grid.grid_var_names[&quot;Mesh2&quot;]</span>
+<span class="c1">#     face_nodes = grid.Mesh2_face_nodes</span>
+
+<span class="c1">#     n_face = grid.nMesh2_face</span>
+<span class="c1">#     fill_value = face_nodes.attrs[&quot;_FillValue&quot;]</span>
+<span class="c1">#     valid = face_nodes != fill_value</span>
+<span class="c1">#     n_per_row = valid.sum(axis=1)</span>
+<span class="c1">#     n_triangle_per_row = n_per_row - 2</span>
+<span class="c1">#     face_ori = np.repeat(np.arange(n_face), n_per_row)</span>
+<span class="c1">#     node_ori = face_nodes.values.ravel()[valid.values.ravel()]</span>
+<span class="c1">#     if face_nodes.attrs[&quot;start_index&quot;] == 1:</span>
+<span class="c1">#         node_ori -= 1</span>
+
+<span class="c1">#     def _triangulate(</span>
+<span class="c1">#         face_ori: np.ndarray, node_ori: np.ndarray, n_triangle_per_row: xr.DataArray</span>
+<span class="c1">#     ) -&gt; np.ndarray:</span>
+<span class="c1">#         n_triangle = n_triangle_per_row.sum().compute().item()</span>
+<span class="c1">#         n_face = len(face_ori)</span>
+<span class="c1">#         index_first = np.argwhere(np.diff(face_ori, prepend=-1) != 0)</span>
+<span class="c1">#         index_second = index_first + 1</span>
+<span class="c1">#         index_last = np.argwhere(np.diff(face_ori, append=-1) != 0)</span>
+
+<span class="c1">#         first = np.full(n_face, False)</span>
+<span class="c1">#         first[index_first] = True</span>
+<span class="c1">#         second = np.full(n_face, True) &amp; ~first</span>
+<span class="c1">#         second[index_last] = False</span>
+<span class="c1">#         third = np.full(n_face, True) &amp; ~first</span>
+<span class="c1">#         third[index_second] = False</span>
+
+<span class="c1">#         triangles = np.empty((n_triangle, 3), np.int32)</span>
+<span class="c1">#         triangles[:, 0] = np.repeat(node_ori[first], n_triangle_per_row)</span>
+<span class="c1">#         triangles[:, 1] = node_ori[second]</span>
+<span class="c1">#         triangles[:, 2] = node_ori[third]</span>
+<span class="c1">#         return triangles</span>
+
+<span class="c1">#     triangles = _triangulate(face_ori, node_ori, n_triangle_per_row)</span>
+
+<span class="c1">#     triangle_original_ind = np.repeat(np.arange(n_face), repeats=n_triangle_per_row)</span>
+
+<span class="c1">#     # Copy the data from the original grid</span>
+<span class="c1">#     ds_tri = grid._ds.copy()</span>
+<span class="c1">#     # Drop the original face_nodes variable</span>
+<span class="c1">#     # TODO dryFlagElement is needed to be updated not dropped, but let&#39;s drop</span>
+<span class="c1">#     # it for now.</span>
+<span class="c1">#     varnames_to_drop = [</span>
+<span class="c1">#         f&quot;{mesh_name}_face_nodes&quot;,</span>
+<span class="c1">#         &quot;dryFlagElement&quot;,</span>
+<span class="c1">#         f&quot;{mesh_name}_face_x&quot;,</span>
+<span class="c1">#         f&quot;{mesh_name}_face_y&quot;,</span>
+<span class="c1">#         &quot;nNodes_per_face&quot;,</span>
+<span class="c1">#     ]</span>
+<span class="c1">#     for varname in varnames_to_drop:</span>
+<span class="c1">#         if varname in ds_tri:</span>
+<span class="c1">#             ds_tri = ds_tri.drop_vars(varname)</span>
+<span class="c1">#     da_face_nodes = xr.DataArray(</span>
+<span class="c1">#         data=triangles,</span>
+<span class="c1">#         dims=(f&quot;n{mesh_name}_face&quot;, &quot;three&quot;),</span>
+<span class="c1">#         name=f&quot;{mesh_name}_face_nodes&quot;,</span>
+<span class="c1">#     )</span>
+<span class="c1">#     da_face_nodes.attrs[&quot;start_index&quot;] = 0</span>
+<span class="c1">#     da_face_nodes.attrs[&quot;cf_role&quot;] = &quot;face_node_connectivity&quot;</span>
+<span class="c1">#     ds_tri[da_face_nodes.name] = da_face_nodes</span>
+<span class="c1">#     da_elem_ind = xr.DataArray(</span>
+<span class="c1">#         data=triangle_original_ind,</span>
+<span class="c1">#         dims=(f&quot;n{mesh_name}_face&quot;),</span>
+<span class="c1">#         name=f&quot;{mesh_name}_face_original&quot;,</span>
+<span class="c1">#     )</span>
+<span class="c1">#     ds_tri[da_elem_ind.name] = da_elem_ind</span>
+<span class="c1">#     grid_tri = Grid(ds_tri, islation=False, mesh_type=&quot;ugrid&quot;)</span>
+<span class="c1">#     grid_tri.Mesh2.attrs[&quot;start_index&quot;] = 0</span>
+<span class="c1">#     return grid_tri</span>
+
+
+<span class="c1"># def face_average(val, face_nodes, n_nodes_per_face):</span>
+<span class="c1">#     &quot;&quot;&quot;Calculate face average of a variable</span>
+
+<span class="c1">#     Calculate average of a variable at each face. No weighting is applied.</span>
+
+<span class="c1">#     Parameters</span>
+<span class="c1">#     ----------</span>
+<span class="c1">#     val: ndarray, required</span>
+<span class="c1">#         values to process. The last dimension must be for the nodes.</span>
+<span class="c1">#     face_nodes: ndarray, required</span>
+<span class="c1">#         Face-node connectivity array</span>
+<span class="c1">#     n_nodes_per_face: ndarray, required</span>
+<span class="c1">#         Number of nodes per face</span>
+
+<span class="c1">#     Returns</span>
+<span class="c1">#     -------</span>
+<span class="c1">#     xarray.DataArray</span>
+<span class="c1">#         Face averaged variable</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     n_face, _ = face_nodes.shape</span>
+
+<span class="c1">#     # set initial area of each face to 0</span>
+<span class="c1">#     result = np.zeros(val.shape[:-1] + (n_face,))</span>
+
+<span class="c1">#     for face_idx, max_nodes in enumerate(n_nodes_per_face):</span>
+<span class="c1">#         avg = val[..., face_nodes[face_idx, 0:max_nodes]].sum(axis=-1) / max_nodes</span>
+<span class="c1">#         result[..., face_idx] = avg</span>
+<span class="c1">#     return result</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2025, California Department of Water Resources.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

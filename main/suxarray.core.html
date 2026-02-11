@@ -1,0 +1,652 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>suxarray.core package &mdash; suxarray 2025.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=ebac260a"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            suxarray
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Suxarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">suxarray</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">suxarray.core package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/suxarray.core.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="suxarray-core-package">
+<h1>suxarray.core package<a class="headerlink" href="#suxarray-core-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-suxarray.core.api">
+<span id="suxarray-core-api-module"></span><h2>suxarray.core.api module<a class="headerlink" href="#module-suxarray.core.api" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.api.open_grid">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.api.</span></span><span class="sig-name descname"><span class="pre">open_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files_out2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PathLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files_zcoords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PathLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#open_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.api.open_grid" title="Link to this definition"></a></dt>
+<dd><p>Open SCHISM out2d and zCoordinates files and return a grid object</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>files_out2d<span class="classifier">str, os.PathLike, list, tuple</span></dt><dd><p>SCHISM out2d files</p>
+</dd>
+<dt>files_zcoords<span class="classifier">str, os.PathLike, list, tuple</span></dt><dd><p>SCHISM zCoordinates files</p>
+</dd>
+<dt>chunks<span class="classifier">dict, optional</span></dt><dd><p>Chunks for dask</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<p><cite>suxarray.Grid</cite></p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.api.open_hgrid_gr3">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.api.</span></span><span class="sig-name descname"><span class="pre">open_hgrid_gr3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_hgrid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PathLike</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#open_hgrid_gr3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.api.open_hgrid_gr3" title="Link to this definition"></a></dt>
+<dd><p>Read SCHISM hgrid.gr3 file and return a suxarray grid</p>
+<p>Parameters</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.api.read_grid">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.api.</span></span><span class="sig-name descname"><span class="pre">read_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_out2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_zcoords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#read_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.api.read_grid" title="Link to this definition"></a></dt>
+<dd><p>Read grid information from xarray datasets and return a suxarray grid</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ds_out2d<span class="classifier">xr.Dataset</span></dt><dd><p>Dataset containing SCHISM out2d-like information</p>
+</dd>
+<dt>ds_zcoords<span class="classifier">xr.Dataset, optional</span></dt><dd><p>Dataset containing SCHISM z-coordinate like information</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p><cite>suxarray.Grid</cite></p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.api.read_schism_nc">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.api.</span></span><span class="sig-name descname"><span class="pre">read_schism_nc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#suxarray.core.dataset.SxDataset" title="suxarray.core.dataset.SxDataset"><span class="pre">SxDataset</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#read_schism_nc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.api.read_schism_nc" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.api.write_gr3">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.api.</span></span><span class="sig-name descname"><span class="pre">write_gr3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sxda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#suxarray.core.dataarray.SxDataArray" title="suxarray.core.dataarray.SxDataArray"><span class="pre">SxDataArray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_gr3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PathLike</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-9999.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#write_gr3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.api.write_gr3" title="Link to this definition"></a></dt>
+<dd><p>Write a SCHISM grid to a gr3 file</p>
+<section id="id3">
+<h3>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>sxda<span class="classifier">SxDataArray</span></dt><dd><p>SCHISM data array to write out</p>
+</dd>
+<dt>file_gr3<span class="classifier">str or Path</span></dt><dd><p>Path to the output gr3 file</p>
+</dd>
+<dt>fill_value<span class="classifier">float, optional</span></dt><dd><p>Fill value to use for missing values</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.api.write_schism_grid">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.api.</span></span><span class="sig-name descname"><span class="pre">write_schism_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_gridout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PathLike</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">da</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#write_schism_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.api.write_schism_grid" title="Link to this definition"></a></dt>
+<dd><p>Write a SCHISM grid to a NetCDF file</p>
+<p>The goal of this function is to write a SCHISM grid information to a NetCDF
+file that can be understood by SCHISM VisIt plugin.</p>
+<section id="id4">
+<h3>Parameters<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>file_gridout<span class="classifier">str or Path</span></dt><dd><p>Path to the output NetCDF file</p>
+</dd>
+<dt>grid<span class="classifier">Grid</span></dt><dd><p>SCHISM grid object</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.api.write_schism_nc">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.api.</span></span><span class="sig-name descname"><span class="pre">write_schism_nc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sxda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#suxarray.core.dataarray.SxDataArray" title="suxarray.core.dataarray.SxDataArray"><span class="pre">SxDataArray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_dataout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PathLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#write_schism_nc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.api.write_schism_nc" title="Link to this definition"></a></dt>
+<dd><p>Write a SCHISM data array to NetCDF files</p>
+<p>NOTE: WIP. The API is not finalized.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>sxda<span class="classifier">SxDataset</span></dt><dd><p>SCHISM data array</p>
+</dd>
+<dt>file_dataout<span class="classifier">str or Path, optional</span></dt><dd><p>Path to the output NetCDF file</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-suxarray.core.dataarray">
+<span id="suxarray-core-dataarray-module"></span><h2>suxarray.core.dataarray module<a class="headerlink" href="#module-suxarray.core.dataarray" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">suxarray.core.dataarray.</span></span><span class="sig-name descname"><span class="pre">SxDataArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sxgrid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">UxDataArray</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray.depth_average">
+<span class="sig-name descname"><span class="pre">depth_average</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#suxarray.core.dataarray.SxDataArray" title="suxarray.core.dataarray.SxDataArray"><span class="pre">SxDataArray</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray.depth_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray.depth_average" title="Link to this definition"></a></dt>
+<dd><p>Calculate depth-average of a variable</p>
+<p>This may need to be moved to a separate file.
+TODO: Currently this assumes nodal values. Need to support other <cite>element</cite>.
+TODO: Maybe this can be moved to another file.</p>
+<section id="id6">
+<h3>Parameters<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id7">
+<h3>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>da<span class="classifier">SxDataArray</span></dt><dd><p>Depth averaged variable</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray.integrate">
+<span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quadrature_rule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'triangular'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#suxarray.core.dataarray.SxDataArray" title="suxarray.core.dataarray.SxDataArray"><span class="pre">SxDataArray</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray.integrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray.integrate" title="Link to this definition"></a></dt>
+<dd><p>Computes the integral of a data variable.</p>
+<section id="id8">
+<h3>Parameters<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>quadrature_rule<span class="classifier">str, optional</span></dt><dd><p>Quadrature rule to use. Defaults to “triangular”.</p>
+</dd>
+<dt>order<span class="classifier">int, optional</span></dt><dd><p>Order of quadrature rule. Defaults to 4.</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h3>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>uxda<span class="classifier">UxDataArray</span></dt><dd><p>UxDataArray containing the integrated data variable</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<p>Open a Uxarray dataset and compute the integral</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">uxarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ux</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uxds</span> <span class="o">=</span> <span class="n">ux</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;grid.ug&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid_pressure_data_ug&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integral</span> <span class="o">=</span> <span class="n">uxds</span><span class="p">[</span><span class="s2">&quot;psi&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">integrate</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray.isel">
+<span class="sig-name descname"><span class="pre">isel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ignore_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray.isel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray.isel" title="Link to this definition"></a></dt>
+<dd><p>Grid-aware index selection.</p>
+<p>Performs xarray-style integer-location indexing along specified dimensions.
+If a single grid dimension (‘n_node’, ‘n_edge’, or ‘n_face’) is provided
+and <cite>ignore_grid=False</cite>, the underlying grid is sliced accordingly,
+and remaining indexers are applied to the resulting DataArray.</p>
+<section id="id10">
+<h3>Parameters<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>indexers<span class="classifier">Mapping[Any, Any], optional</span></dt><dd><p>A mapping of dimension names to indexers. Each indexer may be an integer,
+slice, array-like, or DataArray. Mutually exclusive with indexing via kwargs.</p>
+</dd>
+<dt>drop<span class="classifier">bool, default=False</span></dt><dd><p>If True, drop any coordinate variables indexed by integers instead of
+retaining them as length-1 dimensions.</p>
+</dd>
+<dt>missing_dims<span class="classifier">{‘raise’, ‘warn’, ‘ignore’}, default=’raise’</span></dt><dd><p>Behavior when indexers reference dimensions not present in the array.
+- ‘raise’: raise an error
+- ‘warn’: emit a warning and ignore missing dimensions
+- ‘ignore’: ignore missing dimensions silently</p>
+</dd>
+<dt>ignore_grid<span class="classifier">bool, default=False</span></dt><dd><p>If False (default), allow slicing on one grid dimension to automatically
+update the associated UXarray grid. If True, fall back to pure xarray behavior.</p>
+</dd>
+<dt>inverse_indices<span class="classifier">bool, default=False</span></dt><dd><p>For grid-based slicing, pass this flag to <cite>Grid.isel</cite> to invert indices
+when selecting (useful for staggering or reversing order).</p>
+</dd>
+<dt><a href="#id11"><span class="problematic" id="id12">**</span></a>indexers_kwargs<span class="classifier">dimension=indexer pairs, optional</span></dt><dd><p>Alternative syntax for specifying <cite>indexers</cite> via keyword arguments.</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h3>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>UxDataArray</dt><dd><p>A new UxDataArray indexed according to <cite>indexers</cite> and updated grid if applicable.</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>TypeError</dt><dd><p>If <cite>indexers</cite> is provided and is not a Mapping.</p>
+</dd>
+<dt>ValueError</dt><dd><p>If more than one grid dimension is selected and <cite>ignore_grid=False</cite>.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray.item">
+<span class="sig-name descname"><span class="pre">item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray.item" title="Link to this definition"></a></dt>
+<dd><p>Copy an element of an array to a standard Python scalar and return it.</p>
+<section id="id14">
+<h3>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<p>*args : Arguments (variable number and type)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>none: in this case, the method only works for arrays
+with one element (<cite>a.size == 1</cite>), which element is
+copied into a standard Python scalar object and returned.</p></li>
+<li><p>int_type: this argument is interpreted as a flat index into
+the array, specifying which element to copy and return.</p></li>
+<li><p>tuple of int_types: functions as does a single int_type argument,
+except that the argument is interpreted as an nd-index into the
+array.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="id15">
+<h3>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>z<span class="classifier">Standard Python scalar object</span></dt><dd><p>A copy of the specified element of the array as a suitable
+Python scalar</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h3>
+<p>When the data type of <cite>a</cite> is longdouble or clongdouble, item() returns
+a scalar array object because there is no available Python scalar that
+would not lose information. Void arrays return a buffer object for item(),
+unless fields are defined, in which case a tuple is returned.</p>
+<p><cite>item</cite> is very similar to a[args], except, instead of an array scalar,
+a standard Python scalar is returned. This can be useful for speeding up
+access to elements of the array and doing arithmetic on elements of the
+array using Python’s optimized math.</p>
+</section>
+<section id="id16">
+<h3>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">array([[2, 2, 6],</span>
+<span class="go">       [1, 3, 6],</span>
+<span class="go">       [1, 0, 1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>For an array with object dtype, elements are returned as-is.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">1</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="c1">#return np.int64</span>
+<span class="go">np.int64(1)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray.searchsorted">
+<span class="sig-name descname"><span class="pre">searchsorted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'left'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray.searchsorted" title="Link to this definition"></a></dt>
+<dd><p>Find indices where elements of v should be inserted in a to maintain order.</p>
+<p>For full documentation, see <cite>numpy.searchsorted</cite></p>
+<section id="see-also">
+<h3>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h3>
+<p>numpy.searchsorted : equivalent function</p>
+</section>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray.subset">
+<span class="sig-name descname"><span class="pre">subset</span></span><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray.subset" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="suxarray.subset.html#suxarray.subset.dataarray_accessor.DataArraySubsetAccessor" title="suxarray.subset.dataarray_accessor.DataArraySubsetAccessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataArraySubsetAccessor</span></code></a></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="suxarray.core.dataarray.SxDataArray.sxgrid">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sxgrid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span><a class="headerlink" href="#suxarray.core.dataarray.SxDataArray.sxgrid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-suxarray.core.dataset">
+<span id="suxarray-core-dataset-module"></span><h2>suxarray.core.dataset module<a class="headerlink" href="#module-suxarray.core.dataset" title="Link to this heading"></a></h2>
+<p>suxarray module</p>
+<p><cite>suxarray</cite> is a module that extends the functionality of <cite>uxarray</cite> for the
+SCHISM grid.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="suxarray.core.dataset.SxDataset">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">suxarray.core.dataset.</span></span><span class="sig-name descname"><span class="pre">SxDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sxgrid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_datasets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/suxarray/core/dataset.html#SxDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.dataset.SxDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">UxDataset</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="suxarray.core.dataset.SxDataset.sxgrid">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sxgrid</span></span><a class="headerlink" href="#suxarray.core.dataset.SxDataset.sxgrid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-suxarray.core.utils">
+<span id="suxarray-core-utils-module"></span><h2>suxarray.core.utils module<a class="headerlink" href="#module-suxarray.core.utils" title="Link to this heading"></a></h2>
+</section>
+<section id="module-suxarray.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-suxarray.core" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">suxarray.core.</span></span><span class="sig-name descname"><span class="pre">SxDataArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sxgrid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.SxDataArray" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">UxDataArray</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray.depth_average">
+<span class="sig-name descname"><span class="pre">depth_average</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#suxarray.core.dataarray.SxDataArray" title="suxarray.core.dataarray.SxDataArray"><span class="pre">SxDataArray</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray.depth_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.SxDataArray.depth_average" title="Link to this definition"></a></dt>
+<dd><p>Calculate depth-average of a variable</p>
+<p>This may need to be moved to a separate file.
+TODO: Currently this assumes nodal values. Need to support other <cite>element</cite>.
+TODO: Maybe this can be moved to another file.</p>
+<section id="id17">
+<h3>Parameters<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id18">
+<h3>Returns<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>da<span class="classifier">SxDataArray</span></dt><dd><p>Depth averaged variable</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray.integrate">
+<span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quadrature_rule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'triangular'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#suxarray.core.dataarray.SxDataArray" title="suxarray.core.dataarray.SxDataArray"><span class="pre">SxDataArray</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray.integrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.SxDataArray.integrate" title="Link to this definition"></a></dt>
+<dd><p>Computes the integral of a data variable.</p>
+<section id="id19">
+<h3>Parameters<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>quadrature_rule<span class="classifier">str, optional</span></dt><dd><p>Quadrature rule to use. Defaults to “triangular”.</p>
+</dd>
+<dt>order<span class="classifier">int, optional</span></dt><dd><p>Order of quadrature rule. Defaults to 4.</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h3>Returns<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>uxda<span class="classifier">UxDataArray</span></dt><dd><p>UxDataArray containing the integrated data variable</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h3>Examples<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<p>Open a Uxarray dataset and compute the integral</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">uxarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ux</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uxds</span> <span class="o">=</span> <span class="n">ux</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;grid.ug&quot;</span><span class="p">,</span> <span class="s2">&quot;centroid_pressure_data_ug&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integral</span> <span class="o">=</span> <span class="n">uxds</span><span class="p">[</span><span class="s2">&quot;psi&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">integrate</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray.isel">
+<span class="sig-name descname"><span class="pre">isel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ignore_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/suxarray/core/dataarray.html#SxDataArray.isel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.SxDataArray.isel" title="Link to this definition"></a></dt>
+<dd><p>Grid-aware index selection.</p>
+<p>Performs xarray-style integer-location indexing along specified dimensions.
+If a single grid dimension (‘n_node’, ‘n_edge’, or ‘n_face’) is provided
+and <cite>ignore_grid=False</cite>, the underlying grid is sliced accordingly,
+and remaining indexers are applied to the resulting DataArray.</p>
+<section id="id22">
+<h3>Parameters<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>indexers<span class="classifier">Mapping[Any, Any], optional</span></dt><dd><p>A mapping of dimension names to indexers. Each indexer may be an integer,
+slice, array-like, or DataArray. Mutually exclusive with indexing via kwargs.</p>
+</dd>
+<dt>drop<span class="classifier">bool, default=False</span></dt><dd><p>If True, drop any coordinate variables indexed by integers instead of
+retaining them as length-1 dimensions.</p>
+</dd>
+<dt>missing_dims<span class="classifier">{‘raise’, ‘warn’, ‘ignore’}, default=’raise’</span></dt><dd><p>Behavior when indexers reference dimensions not present in the array.
+- ‘raise’: raise an error
+- ‘warn’: emit a warning and ignore missing dimensions
+- ‘ignore’: ignore missing dimensions silently</p>
+</dd>
+<dt>ignore_grid<span class="classifier">bool, default=False</span></dt><dd><p>If False (default), allow slicing on one grid dimension to automatically
+update the associated UXarray grid. If True, fall back to pure xarray behavior.</p>
+</dd>
+<dt>inverse_indices<span class="classifier">bool, default=False</span></dt><dd><p>For grid-based slicing, pass this flag to <cite>Grid.isel</cite> to invert indices
+when selecting (useful for staggering or reversing order).</p>
+</dd>
+<dt><a href="#id23"><span class="problematic" id="id24">**</span></a>indexers_kwargs<span class="classifier">dimension=indexer pairs, optional</span></dt><dd><p>Alternative syntax for specifying <cite>indexers</cite> via keyword arguments.</p>
+</dd>
+</dl>
+</section>
+<section id="id25">
+<h3>Returns<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>UxDataArray</dt><dd><p>A new UxDataArray indexed according to <cite>indexers</cite> and updated grid if applicable.</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h3>Raises<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>TypeError</dt><dd><p>If <cite>indexers</cite> is provided and is not a Mapping.</p>
+</dd>
+<dt>ValueError</dt><dd><p>If more than one grid dimension is selected and <cite>ignore_grid=False</cite>.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray.item">
+<span class="sig-name descname"><span class="pre">item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#suxarray.core.SxDataArray.item" title="Link to this definition"></a></dt>
+<dd><p>Copy an element of an array to a standard Python scalar and return it.</p>
+<section id="id27">
+<h3>Parameters<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<p>*args : Arguments (variable number and type)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>none: in this case, the method only works for arrays
+with one element (<cite>a.size == 1</cite>), which element is
+copied into a standard Python scalar object and returned.</p></li>
+<li><p>int_type: this argument is interpreted as a flat index into
+the array, specifying which element to copy and return.</p></li>
+<li><p>tuple of int_types: functions as does a single int_type argument,
+except that the argument is interpreted as an nd-index into the
+array.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="id28">
+<h3>Returns<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>z<span class="classifier">Standard Python scalar object</span></dt><dd><p>A copy of the specified element of the array as a suitable
+Python scalar</p>
+</dd>
+</dl>
+</section>
+<section id="id29">
+<h3>Notes<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<p>When the data type of <cite>a</cite> is longdouble or clongdouble, item() returns
+a scalar array object because there is no available Python scalar that
+would not lose information. Void arrays return a buffer object for item(),
+unless fields are defined, in which case a tuple is returned.</p>
+<p><cite>item</cite> is very similar to a[args], except, instead of an array scalar,
+a standard Python scalar is returned. This can be useful for speeding up
+access to elements of the array and doing arithmetic on elements of the
+array using Python’s optimized math.</p>
+</section>
+<section id="id30">
+<h3>Examples<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">array([[2, 2, 6],</span>
+<span class="go">       [1, 3, 6],</span>
+<span class="go">       [1, 0, 1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>For an array with object dtype, elements are returned as-is.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">1</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="c1">#return np.int64</span>
+<span class="go">np.int64(1)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray.searchsorted">
+<span class="sig-name descname"><span class="pre">searchsorted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'left'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#suxarray.core.SxDataArray.searchsorted" title="Link to this definition"></a></dt>
+<dd><p>Find indices where elements of v should be inserted in a to maintain order.</p>
+<p>For full documentation, see <cite>numpy.searchsorted</cite></p>
+<section id="id31">
+<h3>See Also<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<p>numpy.searchsorted : equivalent function</p>
+</section>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray.subset">
+<span class="sig-name descname"><span class="pre">subset</span></span><a class="headerlink" href="#suxarray.core.SxDataArray.subset" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="suxarray.subset.html#suxarray.subset.dataarray_accessor.DataArraySubsetAccessor" title="suxarray.subset.dataarray_accessor.DataArraySubsetAccessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataArraySubsetAccessor</span></code></a></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="suxarray.core.SxDataArray.sxgrid">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sxgrid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span><a class="headerlink" href="#suxarray.core.SxDataArray.sxgrid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="suxarray.core.SxDataset">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">suxarray.core.</span></span><span class="sig-name descname"><span class="pre">SxDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sxgrid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_datasets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/suxarray/core/dataset.html#SxDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.SxDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">UxDataset</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="suxarray.core.SxDataset.sxgrid">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sxgrid</span></span><a class="headerlink" href="#suxarray.core.SxDataset.sxgrid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="suxarray.core.read_schism_nc">
+<span class="sig-prename descclassname"><span class="pre">suxarray.core.</span></span><span class="sig-name descname"><span class="pre">read_schism_nc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="suxarray.grid.html#suxarray.grid.grid.Grid" title="suxarray.grid.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#suxarray.core.dataset.SxDataset" title="suxarray.core.dataset.SxDataset"><span class="pre">SxDataset</span></a></span></span><a class="reference internal" href="_modules/suxarray/core/api.html#read_schism_nc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#suxarray.core.read_schism_nc" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2025, California Department of Water Resources.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
