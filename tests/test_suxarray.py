@@ -81,6 +81,20 @@ def test_subset_bounding_polygon(sxds_test_dask):
     assert da_subset.uxgrid.n_face == 10
 
 
+def test_subset_elements_bounding_polygon(sxds_element_test):
+    """Test subsetting dataarray with data at elements with a polygon."""
+    grid = sxds_element_test.uxgrid
+
+    lon_bounds = (grid.node_lon.min().values, grid.node_lon.max().values)
+    lat_bounds = (grid.node_lat.min().values, 0)
+
+    vertVel = sxds_element_test["verticalVelAtElement"]
+
+    da_subset = vertVel.subset.bounding_box(lon_bounds, lat_bounds, [['face']])
+    assert da_subset.uxgrid.n_node == 1319
+    assert da_subset.uxgrid.n_face == 2221
+
+
 def test_subset_bounding_box(sxds_test_dask):
     """Test find_element_at"""
     da_subset = sxds_test_dask["salinity"].subset.bounding_box_xy(
