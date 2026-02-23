@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional, Union
 import pyproj
 import xarray as xr
+import numpy as np
 from uxarray.conventions.ugrid import (
     CARTESIAN_NODE_COORDINATES,
     CARTESIAN_FACE_COORDINATES,
@@ -73,7 +74,10 @@ def _read_schism_grid(
         }
         ds_zcoords = ds_zcoords.swap_dims(dim_dict_zcoords)
         if "nSCHISM_vgrid_layers" in ds_zcoords.dims:
-            ds_zcoords = ds_zcoords.swap_dims({"nSCHISM_vgrid_layers": "n_layer"})
+            ds_zcoords = ds_zcoords.swap_dims({"nSCHISM_vgrid_layers":
+                                               "n_layer"})
+
+        ds_out2d = _assign_z_coords(ds_out2d, ds_zcoords)
 
     ds_sgrid_info = xr.Dataset()
     for varname in SCHISM_GRID_TIME_VARIABLES:
@@ -83,6 +87,127 @@ def _read_schism_grid(
 
     return ds_out2d, ds_sgrid_info
 
+def _assign_z_coords(ds_out2d, ds_zcoords) -> xr.Dataset:
+    """Assign z-coordinates to the grid dataset.
+
+    Creates both static 1D zCoordinates (bottom layer) for subsetting operations
+    and full 3D zCoordinates as data variables for actual z-coordinate access.
+
+    Parameters
+    ----------
+    ds_out2d : xr.Dataset
+        Dataset containing grid connectivity information
+    ds_zcoords : xr.Dataset
+        Dataset containing zCoordinates variable with dims (time,n_node,n_layer)
+
+    Returns
+    -------
+    xr.Dataset
+        ds_out2d with z-coordinates added:
+        - node_z, edge_z, face_z: 1D static coords (bottom layer) for subsetting
+        - node_z_3d, edge_z_3d, face_z_3d: 3D data variables for z-coordinates.
+    """
+    # Calculate full 3D z-coordinates (transposed to have spatial dim first)
+    node_z_3d = ds_zcoords.zCoordinates.values.transpose(1, 0, 2)
+    edge_z_3d = _calculate_edge_z(ds_zcoords, ds_out2d)
+    face_z_3d = _calculate_face_z(ds_zcoords, ds_out2d)
+
+    # Extract bottom layer (index -1) as static 1D coordinates for subsetting
+    # Bottom layer represents depth which doesn't change with time
+    node_z = node_z_3d[:, 0, -1]  # shape (n_node,)
+    edge_z = edge_z_3d[:, 0, -1]  # shape (n_edge,)
+    face_z = face_z_3d[:, 0, -1]  # shape (n_face,)
+
+    # Assign 1D static coordinates (for uxarray subsetting)
+    ds_out2d = ds_out2d.assign_coords({
+        "node_z": (("n_node",), node_z),
+        "edge_z": (("n_edge",), edge_z),
+        "face_z": (("n_face",), face_z),
+    })
+
+    # Assign 3D z as data variables (for actual z-coordinate access)
+    ds_out2d = ds_out2d.assign({
+        "node_z_3d": (("n_node", "time", "n_layer"), node_z_3d),
+        "edge_z_3d": (("n_edge", "time", "n_layer"), edge_z_3d),
+        "face_z_3d": (("n_face", "time", "n_layer"), face_z_3d),
+    })
+
+    return ds_out2d
+
+def _calculate_edge_z(
+    ds_zcoords: xr.Dataset, ds_out2d: xr.Dataset
+) -> xr.Dataset:
+    """Calculate z-coordinates at edge centers by averaging node z-coordinates.
+
+    For each edge, computes the mean z-coordinate of its two endpoint nodes
+    across all time steps and vertical layers.
+
+    Parameters
+    ----------
+    ds_zcoords : xr.Dataset
+        Dataset containing zCoordinates variable with dims (time,n_node,n_layer)
+    ds_out2d : xr.Dataset
+        Dataset containing edge_node_connectivity with shape (n_edge, 2)
+
+    Returns
+    -------
+    xr.Dataset
+        ds_sgrid_info with edge_z coordinate added, shape (time,n_edge,n_layer)
+
+    TODO: Make this dask-compatible to avoid loading large arrays in memory.
+          Using xr.apply_ufunc with dask="parallelized" or da.map_blocks.
+    """
+    edge_node_ids = ds_out2d.edge_node_connectivity.values  # shape (n_edge, 2)
+    edge_z = ds_zcoords.zCoordinates.values[:, edge_node_ids, :].mean(axis=2)
+    edge_z = edge_z.transpose(1, 0, 2)
+    return edge_z
+
+
+def _calculate_face_z(
+    ds_zcoords: xr.Dataset, ds_out2d: xr.Dataset
+) -> xr.Dataset:
+    """Calculate z-coordinates at face centers by averaging node z-coordinates.
+
+    For each face, computes the mean z-coordinate of its vertices. Making sure
+    to select three or four vertices depending on triangular or quad elements.
+
+    Parameters
+    ----------
+    ds_zcoords : xr.Dataset
+        Dataset containing zCoordinates variable with dims (time,n_node,n_layer)
+    ds_out2d : xr.Dataset
+        Dataset containing edge_node_connectivity with shape (n_edge, 2)
+
+    Returns
+    -------
+    xr.Dataset
+        ds_sgrid_info with face_z coordinate added, shape (time,n_edge,n_layer)
+    """
+
+    # TODO: Make this dask-compatible - same approach as _calculate_edge_z.
+    face_ids = ds_out2d.face_node_connectivity.values  # shape (n_face, 4)
+
+    # Identify triangular and quad elements for correct face calculation
+    fill_value = ds_out2d.face_node_connectivity._FillValue
+    tri_el_ids = np.where(face_ids[:, -1] == fill_value)[0]
+    quad_el_ids = np.where(face_ids[:, -1] != fill_value)[0]
+
+    # TODO: use Dataset.sizes instead of DataArray.dims for futureproofing
+    face_z = np.zeros((ds_zcoords.dims["time"],
+                       len(face_ids),
+                       ds_zcoords.dims["n_layer"]))
+
+    # Create face_z, distinguishing triangular and quad elements.
+    zCoords = ds_zcoords.zCoordinates.values
+    face_z[:, tri_el_ids, :] = zCoords[:,
+                                       face_ids[tri_el_ids, :-1],
+                                       :].mean(axis=2)
+    # TODO: Implement more rigorous face z-coord calculation method.
+    face_z[:, quad_el_ids, :] = zCoords[:,
+                                        face_ids[quad_el_ids, :],
+                                        :].mean(axis=2)
+    face_z = face_z.transpose(1, 0, 2)
+    return face_z
 
 def _find_grid_topology_varname(ds: xr.Dataset) -> str:
     """Find the UGRID grid topology variable name in the dataset

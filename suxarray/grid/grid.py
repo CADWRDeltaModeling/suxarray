@@ -106,7 +106,9 @@ class Grid(ux.Grid):
     def sgrid_isel(self, **kwargs):
         from uxarray.constants import GRID_DIMS
 
-        kwargs_no_grid_dim = {k: v for k, v in kwargs.items() if k not in GRID_DIMS}
+        # Filter out grid dimensions and inverse_indices (not a valid xarray dimension)
+        excluded_keys = set(GRID_DIMS) | {"inverse_indices"}
+        kwargs_no_grid_dim = {k: v for k, v in kwargs.items() if k not in excluded_keys}
         if kwargs_no_grid_dim:
             sgrid_info = self.sgrid_info.copy().isel(kwargs_no_grid_dim)
         else:
