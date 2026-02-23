@@ -1,0 +1,45 @@
+suxarray.core package
+=====================
+
+Submodules
+----------
+
+suxarray.core.api module
+------------------------
+
+.. automodule:: suxarray.core.api
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+suxarray.core.dataarray module
+------------------------------
+
+.. automodule:: suxarray.core.dataarray
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+suxarray.core.dataset module
+----------------------------
+
+.. automodule:: suxarray.core.dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+suxarray.core.utils module
+--------------------------
+
+.. automodule:: suxarray.core.utils
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: suxarray.core
+   :members:
+   :show-inheritance:
+   :undoc-members:
