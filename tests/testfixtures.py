@@ -29,3 +29,22 @@ def sxds_test_dask():
     ).astype(np.float64)
     sxds = sx.read_schism_nc(sxgrid, ds_salinity)
     return sxds
+
+
+@pytest.fixture(scope="module")
+def sxds_element_test():
+    """Test output at element fixture"""
+    p_cur = Path(__file__).parent.absolute()
+    path_out2d = [str(p_cur / "testdata/out2d_alt_{}.nc".format(i)) for i in range(1, 3)]
+    path_zcoords = [
+        str(p_cur / "testdata/zCoordinates_alt_{}.nc".format(i)) for i in range(1, 3)
+    ]
+    chunks = {"time": 12}
+    sxgrid = sx.core.api.open_grid(path_out2d, path_zcoords, chunks=chunks)
+    path_var = [str(p_cur / "testdata/verticalVelAtElement_{}.nc".format(i))
+                for i in range(1, 3)]
+    ds_vertVel = xr.open_mfdataset(
+        path_var, mask_and_scale=False, data_vars="minimal"
+    ).astype(np.float64)
+    sxds = sx.read_schism_nc(sxgrid, ds_vertVel)
+    return sxds
