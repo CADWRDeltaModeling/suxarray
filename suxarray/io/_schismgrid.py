@@ -357,6 +357,16 @@ def _rename_coords(
         }
         data = data.rename(coord_dict)
     # Patch for dimension name renaming.
+    if "SCHISM_hgrid_node_lon" in data:
+        data = data.rename({"SCHISM_hgrid_node_lon": "node_lon",
+                            "SCHISM_hgrid_node_lat": "node_lat"})
+    if "SCHISM_hgrid_face_lon" in data:
+        data = data.rename({"SCHISM_hgrid_face_lon": "face_lon",
+                            "SCHISM_hgrid_face_lat": "face_lat"})
+    if "SCHISM_hgrid_edge_lon" in data:
+        data = data.rename({"SCHISM_hgrid_edge_lon": "edge_lon",
+                            "SCHISM_hgrid_edge_lat": "edge_lat"})
+
     if "nSCHISM_hgrid_edge" in data.dims:
         data = data.rename({"nSCHISM_hgrid_edge": "n_edge"})
     if "nSCHISM_hgrid_face" in data.dims:
