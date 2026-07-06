@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "uxarray==2025.6.0",
+    "uxarray==2025.12.0",
     "shapely>=2.0",
     "Click>=7.0"
 ]
