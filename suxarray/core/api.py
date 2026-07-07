@@ -19,7 +19,7 @@ def read_schism_nc(grid: Grid, ds_data: xr.Dataset) -> SxDataset:
     ds_data = ux.core.utils._map_dims_to_ugrid(ds_data, grid._source_dims_dict, grid)
     if "nSCHISM_vgrid_layers" in ds_data.dims:
         ds_data = ds_data.swap_dims({"nSCHISM_vgrid_layers": "n_layer"})
-    sxds = SxDataset(dict(ds_data.data_vars), sxgrid=grid)
+    sxds = SxDataset(dict(ds_data.data_vars), sxgrid=grid, attrs=ds_data.attrs)
     return sxds
 
 
