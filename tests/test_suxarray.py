@@ -30,6 +30,34 @@ def test_read_schism_nc():
     assert sxds.time.size == 48
 
 
+def test_read_schism_nc_preserves_attrs():
+    """
+    Test conservation of dataset-level attrs in read_schism_nc.
+    """
+    p_cur = Path(__file__).parent.absolute()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    grid = sx.read_grid(ds_out2d, ds_zcoords)
+    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"))
+
+    # Attach sample global attributes to the source dataset.
+    sample_attrs = {
+        "Conventions": "CF-1.0",
+        "title": "Bay-Delta SCHISM salinity output",
+        "source": "SCHISM",
+    }
+    ds_data.attrs = sample_attrs
+
+    sxds = sx.read_schism_nc(grid, ds_data)
+
+    # The global attributes must survive the round trip.
+    for key, value in sample_attrs.items():
+        assert sxds.attrs.get(key) == value
+
+    # The data variable must still be intact.
+    assert "salinity" in sxds
+
+
 def test_read_hgrid_gr3():
     """Test read_hgrid_gr3"""
     # Test with a HelloSCHISM v5.10 hgrid.gr3 file
