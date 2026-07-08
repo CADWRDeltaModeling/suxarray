@@ -1,7 +1,9 @@
 from typing import Dict, Union, Optional
 import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
+from dateutil.parser import parse
 import xarray as xr
 import uxarray as ux
 from suxarray.grid import Grid
@@ -14,6 +16,33 @@ from suxarray.io._schismgrid import (
 )
 from suxarray.conventions.schism_grid import SCHISM_GRID_TIME_VARIABLES_IN_OUT2D
 
+def open_ts_dataset(
+    nc_file_path: Union[str, os.PathLike, Path],
+    ref_time: Optional[pd.Timestamp] = None,
+) -> xr.Dataset:
+    """
+    Reads a NetCDF file and returns an xarray Dataset. Ignores the SCHISM UTC time zone and decodes the time as local time.
+
+    Parameters:
+    nc_file_path (str): Path to the NetCDF file.
+
+    Returns:
+    xarray.Dataset: The dataset read from the NetCDF file.
+    """
+    ds = xr.open_dataset(nc_file_path, decode_times=False)
+    if "time" in ds:
+        if "units" in ds.time.attrs:
+            origin = parse(
+                ds.time.attrs["units"].split("since", 1)[1].strip(), ignoretz=True
+            )  # removes the timezone info from the origin timestring
+            ds.time.attrs["units"] = f"seconds since {origin.isoformat()}"
+            ds = xr.decode_cf(ds)
+        elif ref_time is not None:
+            # If the time variable is missing or doesn't have units, create a time variable based on ref_time
+            ds.time.attrs["units"] = f"seconds since {ref_time.isoformat()}"
+            ds = xr.decode_cf(ds)
+
+    return ds
 
 def read_schism_nc(grid: Grid, ds_data: xr.Dataset) -> SxDataset:
     ds_data = ux.core.utils._map_dims_to_ugrid(ds_data, grid._source_dims_dict, grid)
