@@ -163,8 +163,6 @@ def _calculate_edge_z(
     edge_z = ds_zcoords.zCoordinates.isel(n_node=node_idx).mean(dim="two")
     edge_z = edge_z.transpose("n_edge", "time", "n_layer")
 
-    #edge_z = ds_zcoords.zCoordinates.values[:, edge_node_ids, :].mean(axis=2)
-    #edge_z = edge_z.transpose(1, 0, 2)
     return edge_z
 
 
