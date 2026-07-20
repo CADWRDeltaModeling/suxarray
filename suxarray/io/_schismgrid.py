@@ -168,7 +168,7 @@ def _calculate_edge_z(
 
 def _calculate_face_z(
     ds_zcoords: xr.Dataset, ds_out2d: xr.Dataset
-) -> xr.Dataset:
+) -> xr.DataArray:
     """Calculate z-coordinates at face centers by averaging node z-coordinates.
 
     For each face, computes the mean z-coordinate of its vertices. Making sure
@@ -183,8 +183,8 @@ def _calculate_face_z(
 
     Returns
     -------
-    xr.Dataset
-        ds_sgrid_info with face_z coordinate added, shape (n_face,time,n_layer)
+    xr.DataArray
+        face_z DataArray with shape (n_face, time, n_layer)
     """
 
     # node_connectivity is static and should be light enough to load with numpy
