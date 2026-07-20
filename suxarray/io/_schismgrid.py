@@ -136,7 +136,7 @@ def _assign_z_coords(ds_out2d, ds_zcoords) -> xr.Dataset:
 
 def _calculate_edge_z(
     ds_zcoords: xr.Dataset, ds_out2d: xr.Dataset
-) -> xr.Dataset:
+) -> xr.DataArray:
     """Calculate z-coordinates at edge centers by averaging node z-coordinates.
 
     For each edge, computes the mean z-coordinate of its two endpoint nodes
@@ -151,8 +151,8 @@ def _calculate_edge_z(
 
     Returns
     -------
-    xr.Dataset
-        ds_sgrid_info with edge_z coordinate added, shape (n_edge,time,n_layer)
+    xr.DataArray
+        DataArray of edge z-coordinates with shape (n_edge, time, n_layer)
     """
 
     # node_connectivity is static and should be light enough to load with numpy
