@@ -105,38 +105,40 @@ def _assign_z_coords(ds_out2d, ds_zcoords) -> xr.Dataset:
     xr.Dataset
         ds_out2d with z-coordinates added:
         - node_z, edge_z, face_z: 1D static coords (bottom layer) for subsetting
-        - node_z_3d, edge_z_3d, face_z_3d: 3D data variables for z-coordinates.
+        - node_z_3d: shape (time, n_node, n_layer)
+        - edge_z_3d: shape (time, n_edge, n_layer)
+        - face_z_3d: shape (time, n_face, n_layer)
     """
-    # Calculate full 3D z-coordinates (transposed to have spatial dim first)
-    node_z_3d = ds_zcoords.zCoordinates.values.transpose(1, 0, 2)
+    # Calculate full 3D z-coordinates
+    node_z_3d = ds_zcoords.zCoordinates.transpose("time", "n_node", "n_layer")
     edge_z_3d = _calculate_edge_z(ds_zcoords, ds_out2d)
     face_z_3d = _calculate_face_z(ds_zcoords, ds_out2d)
 
     # Extract bottom layer (index -1) as static 1D coordinates for subsetting
     # Bottom layer represents depth which doesn't change with time
-    node_z = node_z_3d[:, 0, -1]  # shape (n_node,)
-    edge_z = edge_z_3d[:, 0, -1]  # shape (n_edge,)
-    face_z = face_z_3d[:, 0, -1]  # shape (n_face,)
+    node_z = node_z_3d.isel(time=0, n_layer=-1)
+    edge_z = edge_z_3d.isel(time=0, n_layer=-1)
+    face_z = face_z_3d.isel(time=0, n_layer=-1)
 
     # Assign 1D static coordinates (for uxarray subsetting)
     ds_out2d = ds_out2d.assign_coords({
-        "node_z": (("n_node",), node_z),
-        "edge_z": (("n_edge",), edge_z),
-        "face_z": (("n_face",), face_z),
+        "node_z": node_z,
+        "edge_z": edge_z,
+        "face_z": face_z,
     })
 
     # Assign 3D z as data variables (for actual z-coordinate access)
     ds_out2d = ds_out2d.assign({
-        "node_z_3d": (("n_node", "time", "n_layer"), node_z_3d),
-        "edge_z_3d": (("n_edge", "time", "n_layer"), edge_z_3d),
-        "face_z_3d": (("n_face", "time", "n_layer"), face_z_3d),
+        "node_z_3d": node_z_3d,
+        "edge_z_3d": edge_z_3d,
+        "face_z_3d": face_z_3d,
     })
 
     return ds_out2d
 
 def _calculate_edge_z(
     ds_zcoords: xr.Dataset, ds_out2d: xr.Dataset
-) -> xr.Dataset:
+) -> xr.DataArray:
     """Calculate z-coordinates at edge centers by averaging node z-coordinates.
 
     For each edge, computes the mean z-coordinate of its two endpoint nodes
@@ -151,21 +153,24 @@ def _calculate_edge_z(
 
     Returns
     -------
-    xr.Dataset
-        ds_sgrid_info with edge_z coordinate added, shape (time,n_edge,n_layer)
-
-    TODO: Make this dask-compatible to avoid loading large arrays in memory.
-          Using xr.apply_ufunc with dask="parallelized" or da.map_blocks.
+    xr.DataArray
+        DataArray of edge z-coordinates with shape (time, n_edge, n_layer)
     """
+
+    # node_connectivity is static and should be light enough to load with numpy
     edge_node_ids = ds_out2d.edge_node_connectivity.values  # shape (n_edge, 2)
-    edge_z = ds_zcoords.zCoordinates.values[:, edge_node_ids, :].mean(axis=2)
-    edge_z = edge_z.transpose(1, 0, 2)
+    # Roll edge_node_ids into a DataArray
+    node_idx = xr.DataArray(edge_node_ids, dims=["n_edge", "two"])
+    # Lazy xarray operations for indexing and mean
+    edge_z = ds_zcoords.zCoordinates.isel(n_node=node_idx).mean(dim="two")
+    edge_z = edge_z.transpose("time", "n_edge", "n_layer")
+
     return edge_z
 
 
 def _calculate_face_z(
     ds_zcoords: xr.Dataset, ds_out2d: xr.Dataset
-) -> xr.Dataset:
+) -> xr.DataArray:
     """Calculate z-coordinates at face centers by averaging node z-coordinates.
 
     For each face, computes the mean z-coordinate of its vertices. Making sure
@@ -176,37 +181,33 @@ def _calculate_face_z(
     ds_zcoords : xr.Dataset
         Dataset containing zCoordinates variable with dims (time,n_node,n_layer)
     ds_out2d : xr.Dataset
-        Dataset containing edge_node_connectivity with shape (n_edge, 2)
+        Dataset containing face_node_connectivity with shape (n_face, 4)
 
     Returns
     -------
-    xr.Dataset
-        ds_sgrid_info with face_z coordinate added, shape (time,n_edge,n_layer)
+    xr.DataArray
+        face_z DataArray with shape (time, n_face, n_layer)
     """
 
-    # TODO: Make this dask-compatible - same approach as _calculate_edge_z.
+    # node_connectivity is static and should be light enough to load with numpy
     face_ids = ds_out2d.face_node_connectivity.values  # shape (n_face, 4)
 
-    # Identify triangular and quad elements for correct face calculation
+    # Grab fill value for face_node_connectivity to identify triangular elements
     fill_value = ds_out2d.face_node_connectivity._FillValue
-    tri_el_ids = np.where(face_ids[:, -1] == fill_value)[0]
-    quad_el_ids = np.where(face_ids[:, -1] != fill_value)[0]
+    valid_mask = face_ids != fill_value
+    # Replace fill_value with 0 for indexing
+    face_ids_masked = np.where(valid_mask, face_ids, 0)
 
-    # TODO: use Dataset.sizes instead of DataArray.dims for futureproofing
-    face_z = np.zeros((ds_zcoords.dims["time"],
-                       len(face_ids),
-                       ds_zcoords.dims["n_layer"]))
+    # Roll face_ids into a DataArray
+    face_idx = xr.DataArray(face_ids_masked, dims=["n_face", "four"])
+    mask_da = xr.DataArray(valid_mask, dims=["n_face", "four"])
 
-    # Create face_z, distinguishing triangular and quad elements.
-    zCoords = ds_zcoords.zCoordinates.values
-    face_z[:, tri_el_ids, :] = zCoords[:,
-                                       face_ids[tri_el_ids, :-1],
-                                       :].mean(axis=2)
-    # TODO: Implement more rigorous face z-coord calculation method.
-    face_z[:, quad_el_ids, :] = zCoords[:,
-                                        face_ids[quad_el_ids, :],
-                                        :].mean(axis=2)
-    face_z = face_z.transpose(1, 0, 2)
+    # Lazy xarray operations for indexing and mean
+    face_z = ds_zcoords.zCoordinates.isel(n_node=face_idx)
+    # Use the mask to ignore fill values when calculating the mean
+    face_z = face_z.where(mask_da).mean(dim="four")
+    face_z = face_z.transpose("time", "n_face", "n_layer")
+
     return face_z
 
 def _find_grid_topology_varname(ds: xr.Dataset) -> str:
