@@ -120,9 +120,9 @@ def _assign_z_coords(ds_out2d, ds_zcoords) -> xr.Dataset:
 
     # Assign 1D static coordinates (for uxarray subsetting)
     ds_out2d = ds_out2d.assign_coords({
-        "node_z": (("n_node",), node_z.values),
-        "edge_z": (("n_edge",), edge_z.values),
-        "face_z": (("n_face",), face_z.values),
+        "node_z": node_z,
+        "edge_z": edge_z,
+        "face_z": face_z,
     })
 
     # Assign 3D z as data variables (for actual z-coordinate access)
