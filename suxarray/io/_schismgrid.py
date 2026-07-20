@@ -105,10 +105,12 @@ def _assign_z_coords(ds_out2d, ds_zcoords) -> xr.Dataset:
     xr.Dataset
         ds_out2d with z-coordinates added:
         - node_z, edge_z, face_z: 1D static coords (bottom layer) for subsetting
-        - node_z_3d, edge_z_3d, face_z_3d: 3D data variables for z-coordinates.
+        - node_z_3d: shape (time, n_node, n_layer)
+        - edge_z_3d: shape (time, n_edge, n_layer)
+        - face_z_3d: shape (time, n_face, n_layer)
     """
-    # Calculate full 3D z-coordinates (transposed to have spatial dim first)
-    node_z_3d = ds_zcoords.zCoordinates.transpose("n_node", "time", "n_layer")
+    # Calculate full 3D z-coordinates
+    node_z_3d = ds_zcoords.zCoordinates.transpose("time", "n_node", "n_layer")
     edge_z_3d = _calculate_edge_z(ds_zcoords, ds_out2d)
     face_z_3d = _calculate_face_z(ds_zcoords, ds_out2d)
 
@@ -152,7 +154,7 @@ def _calculate_edge_z(
     Returns
     -------
     xr.DataArray
-        DataArray of edge z-coordinates with shape (n_edge, time, n_layer)
+        DataArray of edge z-coordinates with shape (time, n_edge, n_layer)
     """
 
     # node_connectivity is static and should be light enough to load with numpy
@@ -161,7 +163,7 @@ def _calculate_edge_z(
     node_idx = xr.DataArray(edge_node_ids, dims=["n_edge", "two"])
     # Lazy xarray operations for indexing and mean
     edge_z = ds_zcoords.zCoordinates.isel(n_node=node_idx).mean(dim="two")
-    edge_z = edge_z.transpose("n_edge", "time", "n_layer")
+    edge_z = edge_z.transpose("time", "n_edge", "n_layer")
 
     return edge_z
 
@@ -184,7 +186,7 @@ def _calculate_face_z(
     Returns
     -------
     xr.DataArray
-        face_z DataArray with shape (n_face, time, n_layer)
+        face_z DataArray with shape (time, n_face, n_layer)
     """
 
     # node_connectivity is static and should be light enough to load with numpy
@@ -204,7 +206,7 @@ def _calculate_face_z(
     face_z = ds_zcoords.zCoordinates.isel(n_node=face_idx)
     # Use the mask to ignore fill values when calculating the mean
     face_z = face_z.where(mask_da).mean(dim="four")
-    face_z = face_z.transpose("n_face", "time", "n_layer")
+    face_z = face_z.transpose("time", "n_face", "n_layer")
 
     return face_z
 
