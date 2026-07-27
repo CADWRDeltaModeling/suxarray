@@ -28,6 +28,7 @@ classifiers = [
 dependencies = [
     "uxarray==2025.12.0",
     "shapely>=2.0",
+    "gsw>=3.6", # required for density -> mass calculations in `integrate.py`
     "Click>=7.0"
 ]
 
