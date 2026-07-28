@@ -49,6 +49,31 @@ def _face_mean_from_nodal(values, connectivity):
 
     return face_mean
 
+
+def _calc_layers_thickness(z, bottom_indices):
+    """
+    Calculate the thickness of each layer under a set of nodes.
+
+    Parameters
+    z: ndarray, shape (n_time, n_node, n_layer)
+        z-coordinates of nodes
+    bottom_indices: ndarray, shape (n_node,)
+        0-based bottom layer index for each node
+
+    Returns
+        ndarray, shape (n_time, n_layer-1, n_node)
+    """
+
+    thickness = z[:, :, 1:] - z[:, :, :-1]
+
+    if np.any(bottom_indices > 0):
+        layer_idx = np.arange(thickness.shape[2])
+        below_bottom = layer_idx[np.newaxis, :] < bottom_indices[:, np.newaxis]
+        thickness = np.where(below_bottom[np.newaxis, :, :], 0.0, thickness)
+
+    return thickness
+
+
 def _calculate_prism_volumes(node_x, node_y, z, connectivity, bottom_indices):
     """
     Calculate the volume of prism under a selection of nodes for each layer in
@@ -82,15 +107,7 @@ def _calculate_prism_volumes(node_x, node_y, z, connectivity, bottom_indices):
     n_face = connectivity.shape[0]
     n_interfaces = n_layer - 1
 
-    # Compute thickness at all nodes: shape (n_time, n_node, n_interfaces)
-    thickness = z[:, :, 1:] - z[:, :, :-1]
-
-    # TODO: vectorize this loop or use numba to increase perfomance.
-    # Zero out thickness for layers below bottom index for each nodes
-    for n_i in range(n_node):
-        k = bottom_indices[n_i]
-        if k > 0:
-            thickness[:, n_i, :k] = 0.0
+    thickness = _calc_layers_thickness(z, bottom_indices)
 
     # Integrate thickness over elements per timestep
     result = np.zeros((n_time, n_interfaces, n_face))
@@ -153,15 +170,8 @@ def _calculate_volumes_uxarray(sxda, radius_m=None):
     connectivity = grid.face_node_connectivity.values
 
     # Thickness at nodes: shape (n_time, n_node, n_interface)
-    thickness = z[:, :, 1:] - z[:, :, :-1]
-
-    # TODO: vectorize this loop or use numba to increase perfomance.
-    # Zero out thickness below local bottom index.
     bottom_indices = grid.sgrid_info.bottom_index_node.values - 1
-    for node_i in range(thickness.shape[1]):
-        k = bottom_indices[node_i]
-        if k > 0:
-            thickness[:, node_i, :k] = 0.0
+    thickness = _calc_layers_thickness(z, bottom_indices)
 
     # Face-average nodal thickness: shape (n_time, n_interface, n_face)
     # NOTE: This is an arithmetic node mean. For strict parity with the planar
@@ -247,14 +257,8 @@ def _calculate_mass(sxda_salinity, sxda_temperature=None):
     rho_layer = 0.5 * (rho[:, :, :-1] + rho[:, :, 1:])
 
     # Thickness per layer interval: shape (n_time, n_node, n_layer-1)
-    thickness = z[:, :, 1:] - z[:, :, :-1]
     bottom_indices = grid.sgrid_info.bottom_index_node.values - 1
-
-    # TODO: vectorize this loop or use numba to increase perfomance.
-    for n_i in range(thickness.shape[1]):
-        k = bottom_indices[n_i]
-        if k > 0:
-            thickness[:, n_i, :k] = 0.0
+    thickness = _calc_layers_thickness(z, bottom_indices)
 
     # rho * h at each node per layer: shape (n_time, n_node, n_layer-1)
     rho_h = rho_layer * thickness
