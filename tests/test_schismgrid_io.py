@@ -79,12 +79,12 @@ def test_mesh_tri_and_quad_counts(calc_inputs):
 # _calculate_face_z
 
 def test_calculate_face_z_output_shape(calc_inputs):
-    """_calculate_face_z returns (n_face, time, n_layer)."""
+    """_calculate_face_z returns (time, n_face, n_layer)."""
     ds_out2d, ds_zcoords, _ = calc_inputs
     face_z = _calculate_face_z(ds_zcoords, ds_out2d)
-    assert face_z.dims == ("n_face", "time", "n_layer")
-    assert face_z.sizes == {"n_face": N_FACES,
-                            "time": N_TIME,
+    assert face_z.dims == ("time", "n_face", "n_layer")
+    assert face_z.sizes == {"time": N_TIME,
+                            "n_face": N_FACES,
                             "n_layer": N_LAYERS}
 
 
@@ -94,7 +94,7 @@ def test_calculate_face_z_tri_cell(calc_inputs):
     face_z = _calculate_face_z(ds_zcoords, ds_out2d)
     z_raw = ds_zcoords_raw.zCoordinates.values  # (time, n_node, n_layer)
     expected = float(z_raw[0, TRI_NODES, -1].mean())
-    assert float(face_z.values[TRI_IDX, 0, -1]) == pytest.approx(expected,
+    assert float(face_z.values[0, TRI_IDX, -1]) == pytest.approx(expected,
                                                                  rel=1e-5)
 
 
@@ -109,7 +109,7 @@ def test_calculate_face_z_tri_ignores_fill_node(calc_inputs):
     z_raw = ds_zcoords_raw.zCoordinates.values
     # Wrong result if fill wraps to node[-1] = node[N_NODES - 1]
     wrong_mean = float(z_raw[0, TRI_NODES + [N_NODES - 1], -1].mean())
-    assert float(face_z.values[TRI_IDX, 0, -1]) != pytest.approx(wrong_mean,
+    assert float(face_z.values[0, TRI_IDX, -1]) != pytest.approx(wrong_mean,
                                                                 rel=1e-5)
 
 
@@ -130,20 +130,20 @@ def test_calculate_face_z_tri_and_quad_differ(calc_inputs):
     """
     ds_out2d, ds_zcoords, _ = calc_inputs
     face_z = _calculate_face_z(ds_zcoords, ds_out2d)
-    assert float(face_z.values[TRI_IDX, 0, -1]) != pytest.approx(
-        float(face_z.values[QUAD_IDX, 0, -1]), rel=1e-5
+    assert float(face_z.values[0, TRI_IDX, -1]) != pytest.approx(
+        float(face_z.values[0, QUAD_IDX, -1]), rel=1e-5
     )
 
 
 # _calculate_edge_z
 
 def test_calculate_edge_z_output_shape(calc_inputs):
-    """_calculate_edge_z returns (n_edge, time, n_layer)."""
+    """_calculate_edge_z returns (time, n_edge, n_layer)."""
     ds_out2d, ds_zcoords, _ = calc_inputs
     edge_z = _calculate_edge_z(ds_zcoords, ds_out2d)
-    assert edge_z.dims == ("n_edge", "time", "n_layer")
-    assert edge_z.sizes == {"n_edge": N_EDGES,
-                            "time": N_TIME,
+    assert edge_z.dims == ("time", "n_edge", "n_layer")
+    assert edge_z.sizes == {"time": N_TIME,
+                            "n_edge": N_EDGES,
                             "n_layer": N_LAYERS}
 
 
@@ -153,5 +153,5 @@ def test_calculate_edge_z_values(calc_inputs):
     edge_z = _calculate_edge_z(ds_zcoords, ds_out2d)
     z_raw = ds_zcoords_raw.zCoordinates.values  # (time, n_node, n_layer)
     expected = z_raw[:, EDGE_NODES, -1].mean(axis=1)  # (time,)
-    np.testing.assert_allclose(edge_z.values[EDGE_IDX, :, -1],
+    np.testing.assert_allclose(edge_z.values[:, EDGE_IDX, -1],
                                expected, rtol=1e-5)
