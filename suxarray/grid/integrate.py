@@ -143,6 +143,8 @@ def calc_volumes_from_projected(sxda):
         bottom_indices=grid.sgrid_info.bottom_index_node.values - 1,
     )
 
+# TODO: Remove time indexing loops in function and have them only calculate at
+# one timestep
 
 def _calculate_volumes_uxarray(sxda, radius_m=None):
     """Calculate per-face prism volumes using uxarray spherical face areas.
@@ -213,10 +215,18 @@ def _calculate_volumes_uxarray(sxda, radius_m=None):
     return thickness_face * face_areas_m2[np.newaxis, np.newaxis, :]
 
 
-def _calculate_mass(sxda_salinity, sxda_temperature=None):
+# TODO: implement generic prism integration of variables (such as energy,
+# chlorophyll or salt) to complement mass calculation function
+
+# TODO: Test impact of gsw method on performance.
+
+def _calculate_mass_in_ocean(sxda_salinity, sxda_temperature=None):
     """
     Calculate the total water mass in the domain using salinity and temperature
     to compute in-situ density via the TEOS-10 equations (gsw).
+
+    This function is better applied in a ocean domain and not in shallow/estuary
+    domains.
 
     Parameters
     ----------
