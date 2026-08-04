@@ -44,6 +44,20 @@ def open_ts_dataset(
 
     return ds
 
+def _choose_netcdf_engine() -> str:
+    """Pick an available NetCDF backend for xarray.
+
+    Prefer h5netcdf when available to avoid netCDF4 binary issues on
+    some environments. Fallback to netcdf4 for compatibility.
+    """
+    try:
+        import h5netcdf  # noqa: F401
+
+        return "h5netcdf"
+    except ImportError:
+        return "netcdf4"
+
+
 def read_schism_nc(grid: Grid, ds_data: xr.Dataset) -> SxDataset:
     ds_data = ux.core.utils._map_dims_to_ugrid(ds_data, grid._source_dims_dict, grid)
     if "nSCHISM_vgrid_layers" in ds_data.dims:
@@ -94,13 +108,15 @@ def open_grid(
     `suxarray.Grid`
     """
 
+    engine = _choose_netcdf_engine()
+
     # if chunks is None:
     #     chunks = {
     #         "time": 12,
     #     }
     ds_out2d = xr.open_mfdataset(
         files_out2d,
-        engine="netcdf4",
+        engine=engine,
         mask_and_scale=False,
         chunks=chunks,
         preprocess=lambda ds: ds[
@@ -130,7 +146,7 @@ def open_grid(
     if files_zcoords is not None:
         ds_zcoords = xr.open_mfdataset(
             files_zcoords,
-            engine="netcdf4",
+            engine=engine,
             chunks=chunks,
             join="override",
             coords="minimal",
