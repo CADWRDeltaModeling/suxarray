@@ -25,23 +25,14 @@ def test_calculate_prism_volume_synthetic_shaved_cells():
     # 0-based node bottom indices. k > 0 masks interfaces [:k] at that node.
     bottom_indices = np.array([0, 1, 2, 0, 1], dtype=np.int64)
 
-    # z shape: (n_time=2, n_node=5, n_layer=4) -> 3 interfaces.
+    # z shape: (n_node=5, n_layer=4) -> 3 interfaces.
     z = np.array(
         [
-            [
-                [-3.0, -2.0, -1.0, 0.0],
-                [-3.0, -2.0, -1.0, 0.0],
-                [-3.0, -2.0, -1.0, 0.0],
-                [-3.0, -2.0, -1.0, 0.0],
-                [-3.0, -2.0, -1.0, 0.0],
-            ],
-            [
-                [-6.0, -4.0, -2.0, 0.0],
-                [-6.0, -4.0, -2.0, 0.0],
-                [-6.0, -4.0, -2.0, 0.0],
-                [-6.0, -4.0, -2.0, 0.0],
-                [-6.0, -4.0, -2.0, 0.0],
-            ],
+            [-3.0, -2.0, -1.0, 0.0],
+            [-3.0, -2.0, -1.0, 0.0],
+            [-3.0, -2.0, -1.0, 0.0],
+            [-3.0, -2.0, -1.0, 0.0],
+            [-3.0, -2.0, -1.0, 0.0],
         ],
         dtype=np.float64,
     )
@@ -54,24 +45,17 @@ def test_calculate_prism_volume_synthetic_shaved_cells():
         bottom_indices=bottom_indices,
     )
 
-    # Expected shape: (n_time, n_interface, n_face)
-    assert volumes.shape == (2, 3, 3)
+    # Expected shape: (n_interface, n_face)
+    assert volumes.shape == (3, 3)
 
     # Make the geometric factor explicit for readers:
     # expected volume = triangle_area * face-mean(thickness after masking)
     triangle_area_m2 = 2.0
     expected_face_mean_thickness = np.array(
         [
-            [
-                [1.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0],
-                [2.0 / 3.0, 2.0 / 3.0, 1.0],
-                [1.0, 1.0, 1.0],
-            ],
-            [
-                [2.0 / 3.0, 4.0 / 3.0, 4.0 / 3.0],
-                [4.0 / 3.0, 4.0 / 3.0, 2.0],
-                [2.0, 2.0, 2.0],
-            ],
+            [1.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0],
+            [2.0 / 3.0, 2.0 / 3.0, 1.0],
+            [1.0, 1.0, 1.0],
         ],
         dtype=np.float64,
     )
@@ -80,5 +64,5 @@ def test_calculate_prism_volume_synthetic_shaved_cells():
     np.testing.assert_allclose(volumes, expected, rtol=0.0, atol=1e-12)
 
     # Spot-check a couple of entries with pytest.approx for readability.
-    assert volumes[0, 0, 0] == pytest.approx(2.0 / 3.0)
-    assert volumes[1, 2, 2] == pytest.approx(4.0)
+    assert volumes[0, 0] == pytest.approx(2.0 / 3.0)
+    assert volumes[2, 2] == pytest.approx(2.0)
