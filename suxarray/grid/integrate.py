@@ -145,6 +145,46 @@ def _calculate_prism_volumes(node_x, node_y, z, connectivity, bottom_indices):
     return integrated
 
 
+def projected_volume_ufunc_kernel(
+    z,
+    node_x,
+    node_y,
+    connectivity,
+    bottom_indices,
+):
+    """Array-kernel companion for ``calc_volumes_from_projected``.
+
+    This helper is designed for external orchestration with
+    ``xarray.apply_ufunc(..., dask='parallelized')`` where ``z`` is passed as
+    an ndarray block/chunk.
+
+    Parameters
+    ----------
+    z : ndarray, shape (n_node, n_layer)
+        Single-timestep z-coordinates.
+    node_x : ndarray, shape (n_node,)
+        x coordinates of nodes.
+    node_y : ndarray, shape (n_node,)
+        y coordinates of nodes.
+    connectivity : ndarray, shape (n_face, n_node_per_face)
+        Node indices for each face.
+    bottom_indices : ndarray, shape (n_node,)
+        0-based bottom layer index for each node.
+
+    Returns
+    -------
+    ndarray, shape (n_layer-1, n_face)
+        Prism volumes per layer and face for one timestep.
+    """
+    return _calculate_prism_volumes(
+        node_x=node_x,
+        node_y=node_y,
+        z=z,
+        connectivity=connectivity,
+        bottom_indices=bottom_indices,
+    )
+
+
 def calc_volumes_from_projected(sxda):
     """
     Calculate the volume of prism under a selection of nodes for each layer in
@@ -160,7 +200,21 @@ def calc_volumes_from_projected(sxda):
     -------
     ndarray, shape (n_layer-1, n_face)
         Volume of each prism layer under the selection of nodes.
+
+    Notes
+    -----
+    For external dask/xarray parallelization over time, use
+    ``calc_volumes_from_projected_kernel`` with ``xarray.apply_ufunc``.
     """
+    if not hasattr(sxda, "sxgrid"):
+        raise TypeError(
+            "calc_volumes_from_projected expects an SxDataArray (with .sxgrid)."
+            "If you are using xarray.apply_ufunc(..., dask='parallelized'), "
+            "use calc_volumes_from_projected_kernel on z-coordinate array "
+            "blocks and pass grid arrays (node_x, node_y, connectivity, "
+            "bottom_indices) as static arguments."
+        )
+
     grid = sxda.sxgrid
     z = _coerce_single_timestep(grid.sgrid_info.zCoordinates.values, "z")
 
