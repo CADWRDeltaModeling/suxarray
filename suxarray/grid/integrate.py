@@ -185,6 +185,60 @@ def projected_volume_ufunc_kernel(
     )
 
 
+def integrate_prism_variable(sxda, return_per_layer=False):
+    """
+    Integrate a variable under an element over the water column for nodal data.
+
+    Parameters
+    ----------
+    sxda : SxDataArray
+        SxDataArray with z-coordinates and bottom indices containing the
+        variable to integrate. Variable must be a concentration or density-like
+        quantity (e.g., chlorophyll, salt, energy) that can be integrated over
+        the water column to produce a total quantity per face element.
+        This function enforces single-timestep behavior.
+    return_per_layer : bool, optional
+        If True, return per-layer integrated values with shape
+        (n_layer-1, n_face). If False (default), return total integrated
+        values per face with shape (n_face).
+
+    Returns
+    -------
+    ndarray
+        If ``return_per_layer=False``: shape (n_face), integrated variable
+        per face element summed over all layers.
+        If ``return_per_layer=True``: shape (n_layer-1, n_face), integrated
+        variable per layer and face.
+    """
+
+    grid = sxda.sxgrid
+
+    # Extract grid properties
+    node_x = grid.node_x.values.astype(np.float64)
+    node_y = grid.node_y.values.astype(np.float64)
+    connectivity = grid.face_node_connectivity.values
+    z = _coerce_single_timestep(grid.sgrid_info.zCoordinates.values, "z")
+    bottom_indices = grid.sgrid_info.bottom_index_node.values - 1
+    thickness = _calc_layers_thickness(z, bottom_indices)
+
+    # Pull variable to integrate from sxda
+    var_arr = _coerce_single_timestep(sxda.values, "variable")
+
+    # Average variable to layer intervals: shape (n_node, n_layer-1)
+    var_layer = 0.5 * (var_arr[:, :-1] + var_arr[:, 1:])
+    values = (var_layer * thickness).T
+
+    # Integrate!
+    integrated = _integrate_nodal(
+        node_x, node_y, values.astype(np.float64), connectivity
+    )
+
+    if return_per_layer:
+        return integrated
+
+    return integrated.sum(axis=0)
+
+
 def calc_volumes_from_projected(sxda):
     """
     Calculate the volume of prism under a selection of nodes for each layer in
@@ -225,6 +279,7 @@ def calc_volumes_from_projected(sxda):
         connectivity=grid.face_node_connectivity.values,
         bottom_indices=grid.sgrid_info.bottom_index_node.values - 1,
     )
+
 
 def _calculate_volumes_uxarray(sxda, radius_m=None):
     """Calculate per-face prism volumes using uxarray spherical face areas.
@@ -297,9 +352,6 @@ def _calculate_volumes_uxarray(sxda, radius_m=None):
 
     return thickness_face * face_areas_m2[np.newaxis, :]
 
-
-# TODO: implement generic prism integration of variables (such as energy,
-# chlorophyll or salt) to complement mass calculation function
 
 # TODO: Test impact of gsw method on performance.
 
