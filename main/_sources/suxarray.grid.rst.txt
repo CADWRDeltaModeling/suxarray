@@ -1,0 +1,45 @@
+suxarray.grid package
+=====================
+
+Submodules
+----------
+
+suxarray.grid.area module
+-------------------------
+
+.. automodule:: suxarray.grid.area
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+suxarray.grid.grid module
+-------------------------
+
+.. automodule:: suxarray.grid.grid
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+suxarray.grid.integrate module
+------------------------------
+
+.. automodule:: suxarray.grid.integrate
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+suxarray.grid.neighbors module
+------------------------------
+
+.. automodule:: suxarray.grid.neighbors
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: suxarray.grid
+   :members:
+   :show-inheritance:
+   :undoc-members:

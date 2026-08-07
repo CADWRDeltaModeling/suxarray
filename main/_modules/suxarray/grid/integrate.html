@@ -1,0 +1,398 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>suxarray.grid.integrate &mdash; suxarray 2025.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=ebac260a"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            suxarray
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Suxarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">suxarray</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">suxarray.grid.integrate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for suxarray.grid.integrate</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.area</span><span class="w"> </span><span class="kn">import</span> <span class="n">_integrate_nodal</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_earth_radius_at_latitude</span><span class="p">(</span><span class="n">latitude_deg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute geocentric Earth radius (meters) at geodetic latitude.</span>
+
+<span class="sd">    Uses the WGS84 ellipsoid semi-major/minor axes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># WGS84 ellipsoid axes (meters)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mf">6378137.0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mf">6356752.314245</span>
+
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">latitude_deg</span><span class="p">)</span>
+    <span class="n">cos_lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+    <span class="n">sin_lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span>
+    <span class="n">b2</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">b</span>
+
+    <span class="n">numerator</span> <span class="o">=</span> <span class="p">(</span><span class="n">a2</span> <span class="o">*</span> <span class="n">cos_lat</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">b2</span> <span class="o">*</span> <span class="n">sin_lat</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">cos_lat</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">sin_lat</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_face_mean_from_nodal</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">connectivity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Average nodal values onto faces.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    values : ndarray, shape (n_time, n_node, n_interface)</span>
+<span class="sd">        Nodal values to average.</span>
+<span class="sd">    connectivity : ndarray, shape (n_face, n_max_face_nodes)</span>
+<span class="sd">        Face-node connectivity with negative fill values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray, shape (n_time, n_interface, n_face)</span>
+<span class="sd">        Face-averaged values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_time</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">n_interface</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">n_face</span> <span class="o">=</span> <span class="n">connectivity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">face_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_time</span><span class="p">,</span> <span class="n">n_interface</span><span class="p">,</span> <span class="n">n_face</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">face_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_face</span><span class="p">):</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="n">connectivity</span><span class="p">[</span><span class="n">face_i</span><span class="p">]</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="n">node_ids</span><span class="p">[</span><span class="n">node_ids</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">face_mean</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">face_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:,</span> <span class="n">node_ids</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">face_mean</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calc_layers_thickness</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">bottom_indices</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the thickness of each layer under a set of nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    z: ndarray, shape (n_time, n_node, n_layer)</span>
+<span class="sd">        z-coordinates of nodes</span>
+<span class="sd">    bottom_indices: ndarray, shape (n_node,)</span>
+<span class="sd">        0-based bottom layer index for each node</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">        ndarray, shape (n_time, n_layer-1, n_node)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thickness</span> <span class="o">=</span> <span class="n">z</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">z</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">bottom_indices</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">layer_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">thickness</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">below_bottom</span> <span class="o">=</span> <span class="n">layer_idx</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">&lt;</span> <span class="n">bottom_indices</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">thickness</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">below_bottom</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">thickness</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">thickness</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_prism_volumes</span><span class="p">(</span><span class="n">node_x</span><span class="p">,</span> <span class="n">node_y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">connectivity</span><span class="p">,</span> <span class="n">bottom_indices</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the volume of prism under a selection of nodes for each layer in</span>
+<span class="sd">    the vertical direction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_x : ndarray, shape (n_node,)</span>
+<span class="sd">        x coordinates of nodes</span>
+<span class="sd">    node_y : ndarray, shape (n_node,)</span>
+<span class="sd">        y coordinates of nodes</span>
+<span class="sd">    z : ndarray, shape (n_time, n_node, n_layer)</span>
+<span class="sd">        z-coordinates</span>
+<span class="sd">    connectivity : ndarray, shape (n_face, n_node_per_face)</span>
+<span class="sd">        Node indices for each face</span>
+<span class="sd">    bottom_indices : ndarray, shape (n_element,)</span>
+<span class="sd">        0-based bottom layer index for each node</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray, shape (n_time, n_layer-1, n_face)</span>
+<span class="sd">        Volume of each prism layer under the selection of nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Enforce float64 for numba</span>
+    <span class="n">node_x</span> <span class="o">=</span> <span class="n">node_x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">node_y</span> <span class="o">=</span> <span class="n">node_y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="c1"># Extract dimensions</span>
+    <span class="n">n_time</span><span class="p">,</span> <span class="n">n_node</span><span class="p">,</span> <span class="n">n_layer</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">n_face</span> <span class="o">=</span> <span class="n">connectivity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_interfaces</span> <span class="o">=</span> <span class="n">n_layer</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">thickness</span> <span class="o">=</span> <span class="n">_calc_layers_thickness</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">bottom_indices</span><span class="p">)</span>
+
+    <span class="c1"># Integrate thickness over elements per timestep</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_time</span><span class="p">,</span> <span class="n">n_interfaces</span><span class="p">,</span> <span class="n">n_face</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">t_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_time</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">thickness</span><span class="p">[</span><span class="n">t_i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">t_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_integrate_nodal</span><span class="p">(</span><span class="n">node_x</span><span class="p">,</span> <span class="n">node_y</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">connectivity</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="calc_volumes_from_projected">
+<a class="viewcode-back" href="../../../suxarray.grid.html#suxarray.grid.integrate.calc_volumes_from_projected">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_volumes_from_projected</span><span class="p">(</span><span class="n">sxda</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the volume of prism under a selection of nodes for each layer in</span>
+<span class="sd">    the vertical direction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sxda : SxDataArray</span>
+<span class="sd">        SxDataArray with 3D z-coordinates and bottom indices</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray, shape (n_time, n_layer-1, n_face)</span>
+<span class="sd">        Volume of each prism layer under the selection of nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">sxda</span><span class="o">.</span><span class="n">sxgrid</span>
+
+    <span class="k">return</span> <span class="n">_calculate_prism_volumes</span><span class="p">(</span>
+        <span class="n">node_x</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">node_x</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">node_y</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">node_y</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">z</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">zCoordinates</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">connectivity</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">bottom_indices</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">bottom_index_node</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<span class="c1"># TODO: Remove time indexing loops in function and have them only calculate at</span>
+<span class="c1"># one timestep</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_volumes_uxarray</span><span class="p">(</span><span class="n">sxda</span><span class="p">,</span> <span class="n">radius_m</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate per-face prism volumes using uxarray spherical face areas.</span>
+
+<span class="sd">    This path uses uxarray&#39;s unit-sphere face areas from lat/lon geometry,</span>
+<span class="sd">    then scales by a physical sphere radius in meters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sxda : SxDataArray</span>
+<span class="sd">        SxDataArray with 3D z-coordinates and bottom indices.</span>
+<span class="sd">    radius_m : float, optional</span>
+<span class="sd">        Physical sphere radius in meters used to scale uxarray face areas.</span>
+<span class="sd">        If not provided, computes a local geocentric Earth radius from the</span>
+<span class="sd">        mean node latitude.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray, shape (n_time, n_layer-1, n_face)</span>
+<span class="sd">        Volume of each prism layer under each face element.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">sxda</span><span class="o">.</span><span class="n">sxgrid</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">zCoordinates</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">connectivity</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="c1"># Thickness at nodes: shape (n_time, n_node, n_interface)</span>
+    <span class="n">bottom_indices</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">bottom_index_node</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">thickness</span> <span class="o">=</span> <span class="n">_calc_layers_thickness</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">bottom_indices</span><span class="p">)</span>
+
+    <span class="c1"># Face-average nodal thickness: shape (n_time, n_interface, n_face)</span>
+    <span class="c1"># NOTE: This is an arithmetic node mean. For strict parity with the planar</span>
+    <span class="c1"># path on quads, we may need to mirror its bilinear quadrature weighting.</span>
+    <span class="n">thickness_face</span> <span class="o">=</span> <span class="n">_face_mean_from_nodal</span><span class="p">(</span><span class="n">thickness</span><span class="p">,</span> <span class="n">connectivity</span><span class="p">)</span>
+
+    <span class="c1"># Compute unit-sphere face areas from lon/lat directly to avoid mutating</span>
+    <span class="c1"># the source grid&#39;s planar cartesian coordinates.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uxarray.grid.area</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_all_face_area_from_coords</span>
+
+    <span class="n">node_lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">node_lon</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">node_lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">node_lat</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">lon_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">node_lon</span><span class="p">)</span>
+    <span class="n">lat_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">node_lat</span><span class="p">)</span>
+    <span class="n">node_x_unit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat_rad</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lon_rad</span><span class="p">)</span>
+    <span class="n">node_y_unit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat_rad</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lon_rad</span><span class="p">)</span>
+    <span class="n">node_z_unit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat_rad</span><span class="p">)</span>
+
+    <span class="n">n_nodes_per_face</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">connectivity</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">face_areas_unit</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_all_face_area_from_coords</span><span class="p">(</span>
+        <span class="n">node_x_unit</span><span class="p">,</span>
+        <span class="n">node_y_unit</span><span class="p">,</span>
+        <span class="n">node_z_unit</span><span class="p">,</span>
+        <span class="n">connectivity</span><span class="p">,</span>
+        <span class="n">n_nodes_per_face</span><span class="p">,</span>
+        <span class="n">quadrature_rule</span><span class="o">=</span><span class="s2">&quot;triangular&quot;</span><span class="p">,</span>
+        <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">latitude_adjusted_area</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Areas are on a unit sphere, so scale to m^2.</span>
+    <span class="k">if</span> <span class="n">radius_m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mean_lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">node_lat</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">radius_m</span> <span class="o">=</span> <span class="n">_earth_radius_at_latitude</span><span class="p">(</span><span class="n">mean_lat</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">radius_m</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius_m</span><span class="p">)</span>
+    <span class="n">face_areas_m2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">face_areas_unit</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">radius_m</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">thickness_face</span> <span class="o">*</span> <span class="n">face_areas_m2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+
+<span class="c1"># TODO: implement generic prism integration of variables (such as energy,</span>
+<span class="c1"># chlorophyll or salt) to complement mass calculation function</span>
+
+<span class="c1"># TODO: Test impact of gsw method on performance.</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_mass_in_ocean</span><span class="p">(</span><span class="n">sxda_salinity</span><span class="p">,</span> <span class="n">sxda_temperature</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the total water mass in the domain using salinity and temperature</span>
+<span class="sd">    to compute in-situ density via the TEOS-10 equations (gsw).</span>
+
+<span class="sd">    This function is better applied in a ocean domain and not in shallow/estuary</span>
+<span class="sd">    domains.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sxda_salinity : SxDataArray</span>
+<span class="sd">        Practical salinity (PSU), shape (n_time, n_node, n_layer)</span>
+<span class="sd">    sxda_temperature : SxDataArray, optional</span>
+<span class="sd">        In-situ temperature (°C), shape (n_time, n_node, n_layer).</span>
+<span class="sd">        Defaults to 15.0 °C if not provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray, shape (n_time, n_layer-1, n_face)</span>
+<span class="sd">        Water mass per prism layer per face element (kg).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">gsw</span>
+
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">sxda_salinity</span><span class="o">.</span><span class="n">sxgrid</span>
+
+    <span class="c1"># Pressure from z-coordinates: shape (n_time, n_node, n_layer)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">zCoordinates</span><span class="o">.</span><span class="n">values</span>
+    <span class="c1"># Expand to (1, n_node, 1) to broadcast with z shape (n_time,n_node,n_layer)</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">node_lat</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">node_lon</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+    <span class="n">pressure</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">p_from_z</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>  <span class="c1"># shape (n_time, n_node, n_layer)</span>
+
+    <span class="c1"># Convert salinity to Absolute Salinity (g/kg)</span>
+    <span class="n">SP</span> <span class="o">=</span> <span class="n">sxda_salinity</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">SA_from_SP</span><span class="p">(</span><span class="n">SP</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>  <span class="c1"># shape (n_time,n_node,n_layer)</span>
+
+    <span class="c1"># Convert temperature to Conservative Temperature</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">sxda_temperature</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="n">sxda_temperature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">15.0</span>
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">pressure</span><span class="p">)</span>  <span class="c1"># shape (n_time, n_node, n_layer)</span>
+
+    <span class="c1"># density: shape (n_time, n_node, n_layer)</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">density</span><span class="o">.</span><span class="n">rho</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">pressure</span><span class="p">)</span>
+
+    <span class="c1"># Average density to layer intervals: shape (n_time, n_node, n_layer-1)</span>
+    <span class="n">rho_layer</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">rho</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">rho</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:])</span>
+
+    <span class="c1"># Thickness per layer interval: shape (n_time, n_node, n_layer-1)</span>
+    <span class="n">bottom_indices</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">sgrid_info</span><span class="o">.</span><span class="n">bottom_index_node</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">thickness</span> <span class="o">=</span> <span class="n">_calc_layers_thickness</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">bottom_indices</span><span class="p">)</span>
+
+    <span class="c1"># rho * h at each node per layer: shape (n_time, n_node, n_layer-1)</span>
+    <span class="n">rho_h</span> <span class="o">=</span> <span class="n">rho_layer</span> <span class="o">*</span> <span class="n">thickness</span>
+
+    <span class="c1"># Integrate rho*h over faces: shape (n_time, n_layer-1, n_face)</span>
+    <span class="n">connectivity</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">face_node_connectivity</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">node_x</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">node_x</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">node_y</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">node_y</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">n_time</span><span class="p">,</span> <span class="n">n_node</span><span class="p">,</span> <span class="n">n_interfaces</span> <span class="o">=</span> <span class="n">rho_h</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">n_face</span> <span class="o">=</span> <span class="n">connectivity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_time</span><span class="p">,</span> <span class="n">n_interfaces</span><span class="p">,</span> <span class="n">n_face</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">t_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_time</span><span class="p">):</span>
+        <span class="n">mass</span><span class="p">[</span><span class="n">t_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_integrate_nodal</span><span class="p">(</span>
+            <span class="n">node_x</span><span class="p">,</span> <span class="n">node_y</span><span class="p">,</span> <span class="n">rho_h</span><span class="p">[</span><span class="n">t_i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">connectivity</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mass</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2025, California Department of Water Resources.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

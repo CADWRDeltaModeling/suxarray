@@ -1,0 +1,21 @@
+suxarray.conventions package
+============================
+
+Submodules
+----------
+
+suxarray.conventions.schism\_grid module
+----------------------------------------
+
+.. automodule:: suxarray.conventions.schism_grid
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: suxarray.conventions
+   :members:
+   :show-inheritance:
+   :undoc-members:

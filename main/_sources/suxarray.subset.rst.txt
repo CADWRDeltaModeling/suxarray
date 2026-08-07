@@ -1,0 +1,29 @@
+suxarray.subset package
+=======================
+
+Submodules
+----------
+
+suxarray.subset.dataarray\_accessor module
+------------------------------------------
+
+.. automodule:: suxarray.subset.dataarray_accessor
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+suxarray.subset.grid\_accessor module
+-------------------------------------
+
+.. automodule:: suxarray.subset.grid_accessor
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: suxarray.subset
+   :members:
+   :show-inheritance:
+   :undoc-members:
