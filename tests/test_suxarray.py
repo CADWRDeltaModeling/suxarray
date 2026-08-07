@@ -95,7 +95,8 @@ def test_find_nearest_node(grid_test):
 
 def test_subset_bounding_polygon(sxds_test_dask):
     """Test subsetting dataarray with a polygon"""
-    # polygon = Polygon([(0.0, 0.0), (1000.0, 0.0), (1000.0, 10400.0), (0.0, 10400.0)])
+    # polygon = Polygon([(0.0, 0.0), (1000.0, 0.0),
+    #                   (1000.0, 10400.0), (0.0, 10400.0)])
     polygon = Polygon(
         [
             (569866.8953279585, 4213065.012236144),
@@ -126,7 +127,8 @@ def test_subset_elements_bounding_polygon(sxds_element_test):
 def test_subset_bounding_box(sxds_test_dask):
     """Test find_element_at"""
     da_subset = sxds_test_dask["salinity"].subset.bounding_box_xy(
-        [569866.8953279585, 570131.3752643355], [4213065.012236144, 4213262.690668024]
+        [569866.8953279585, 570131.3752643355],
+        [4213065.012236144, 4213262.690668024]
     )
     assert da_subset.uxgrid.n_node == 15
     assert da_subset.uxgrid.n_face == 10
