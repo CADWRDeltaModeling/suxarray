@@ -9,7 +9,7 @@ description = "uxarray extension for SCHISM."
 readme = "README.rst"
 requires-python = ">=3.8,<3.13"
 authors = [
-    { name = "California Department of Water Resources", email = "knam@water.ca.gov" }
+    { name = "California Department of Water Resources", email = "knam@water.ca.gov" },
 ]
 license = { file = "LICENSE" }
 keywords = ["suxarray"]
@@ -35,10 +35,7 @@ dependencies = [
 [project.optional-dependencies]
 vtk = ["vtk"]
 
-test = [
-    "pytest>=3",
-    "vtk"
-]
+test = ["pytest>=3", "vtk"]
 
 [project.urls]
 Homepage = "https://github.com/cadwrdeltamodeling/suxarray"
