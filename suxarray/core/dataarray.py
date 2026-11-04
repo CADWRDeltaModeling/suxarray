@@ -86,11 +86,11 @@ class SxDataArray(uxarray.UxDataArray):
     def integrate(
         self, quadrature_rule: Optional[str] = "triangular", order: Optional[int] = 2
     ) -> SxDataArray:
-        if self.values.shape[-1] == self.sxgrid.n_face:
+        if self.shape[-1] == self.sxgrid.n_face:
             return super().integrate(quadrature_rule=quadrature_rule, order=order)
-        elif self.values.shape[-1] == self.sxgrid.n_edge:
+        elif self.shape[-1] == self.sxgrid.n_edge:
             raise ValueError("Integrate is not supported for edge values")
-        elif self.values.shape[-1] == self.sxgrid.n_node:
+        elif self.shape[-1] == self.sxgrid.n_node:
             # If there is a vertical dimension, n_layer, raise an error for now
             if "n_layer" in self.dims:
                 raise ValueError("Integrate is not supported for 3D nodal values yet.")
