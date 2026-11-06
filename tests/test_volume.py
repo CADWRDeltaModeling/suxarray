@@ -66,3 +66,58 @@ def test_calculate_prism_volume_synthetic_shaved_cells():
     # Spot-check a couple of entries with pytest.approx for readability.
     assert volumes[0, 0] == pytest.approx(2.0 / 3.0)
     assert volumes[2, 2] == pytest.approx(2.0)
+
+
+def test_calculate_prism_volume_synthetic_float32():
+    """Validate that prism volume calculation preserves float32 precision on a mixed tri-quad mesh.
+
+    Mesh consists of:
+    - Face 0: Triangle with vertices (0,0), (2,0), (0,2). Area = 2 m^2.
+    - Face 1: Quadrilateral with vertices (2,0), (4,0), (4,2), (2,2). Area = 4 m^2.
+    """
+    node_x = np.array([0.0, 2.0, 0.0, 4.0, 4.0, 2.0], dtype=np.float64)
+    node_y = np.array([0.0, 0.0, 2.0, 0.0, 2.0, 2.0], dtype=np.float64)
+
+    connectivity = np.array(
+        [
+            [0, 1, 2, -1],  # Triangle
+            [1, 3, 4, 5],   # Quadrilateral
+        ],
+        dtype=np.int64,
+    )
+    # Shaved cells: node 0 and node 3 have bottom interface masked
+    bottom_indices = np.array([1, 0, 0, 1, 0, 0], dtype=np.int64)
+
+    # 4 layers -> 3 interfaces, all in float32
+    z = np.tile(
+        np.array([-3.0, -2.0, -1.0, 0.0], dtype=np.float32),
+        (6, 1),
+    )
+
+    volumes = _calculate_prism_volumes(
+        node_x=node_x,
+        node_y=node_y,
+        z=z,
+        connectivity=connectivity,
+        bottom_indices=bottom_indices,
+    )
+
+    assert volumes.dtype == np.float32
+    assert volumes.shape == (3, 2)
+
+    # Expected volumes per layer and face:
+    # Layer 0:
+    #   Tri [0,1,2]: thickness at nodes = [0, 1, 1], mean = 2/3 -> vol = 2.0 * (2/3) = 4/3
+    #   Quad [1,3,4,5]: thickness at nodes = [1, 0, 1, 1], mean = 3/4 -> vol = 4.0 * 0.75 = 3.0
+    # Layers 1 and 2:
+    #   Tri: thickness = 1.0 -> vol = 2.0 * 1.0 = 2.0
+    #   Quad: thickness = 1.0 -> vol = 4.0 * 1.0 = 4.0
+    expected = np.array(
+        [
+            [4.0 / 3.0, 3.0],
+            [2.0, 4.0],
+            [2.0, 4.0],
+        ],
+        dtype=np.float32,
+    )
+    np.testing.assert_allclose(volumes, expected, rtol=1e-5, atol=1e-6)
