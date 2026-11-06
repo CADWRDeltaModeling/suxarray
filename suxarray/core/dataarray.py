@@ -78,7 +78,7 @@ class SxDataArray(uxarray.UxDataArray):
                 [],
             ],
             dask="parallelized",
-            output_dtypes=[float],
+            output_dtypes=[self.dtype],
         )
         name = f"depth_averaged_{self.name}"
         return SxDataArray(da_da, sxgrid=self.sxgrid, name=name)

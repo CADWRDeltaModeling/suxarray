@@ -74,7 +74,7 @@ class SxDataset(ux.UxDataset):
     #                 "nMesh2_face",
     #             ],
     #         ],
-    #         output_dtypes=[float],
+    #         output_dtypes=[dataarray.dtype],
     #         dask_gufunc_kwargs={
     #             "output_sizes": {"nMesh2_face": self.uxgrid.nMesh2_face}
     #         },
