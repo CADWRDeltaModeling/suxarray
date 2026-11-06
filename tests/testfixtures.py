@@ -26,7 +26,7 @@ def sxds_test_dask():
     path_var = [str(p_cur / "testdata/salinity_{}.nc".format(i)) for i in range(1, 3)]
     ds_salinity = xr.open_mfdataset(
         path_var, mask_and_scale=False, data_vars="minimal"
-    ).astype(np.float64)
+    )
     sxds = sx.read_schism_nc(sxgrid, ds_salinity)
     return sxds
 
@@ -45,6 +45,6 @@ def sxds_element_test():
                 for i in range(1, 3)]
     ds_vertVel = xr.open_mfdataset(
         path_var, mask_and_scale=False, data_vars="minimal"
-    ).astype(np.float64)
+    )
     sxds = sx.read_schism_nc(sxgrid, ds_vertVel)
     return sxds

@@ -67,7 +67,7 @@ def _face_mean_from_nodal(values, connectivity):
     """
     n_node, n_interface = values.shape
     n_face = connectivity.shape[0]
-    face_mean = np.zeros((n_interface, n_face), dtype=np.float64)
+    face_mean = np.zeros((n_interface, n_face), dtype=values.dtype)
 
     for face_i in range(n_face):
         node_ids = connectivity[face_i]
@@ -128,10 +128,9 @@ def _calculate_prism_volumes(node_x, node_y, z, connectivity, bottom_indices):
     ndarray, shape (n_layer-1, n_face).
         Prism volumes per layer and face.
     """
-    # Enforce float64 for numba
-    node_x = node_x.astype(np.float64)
-    node_y = node_y.astype(np.float64)
-    z = z.astype(np.float64)
+    # Ensure coordinate arrays are float64 for geometric accuracy
+    node_x = np.asarray(node_x, dtype=np.float64)
+    node_y = np.asarray(node_y, dtype=np.float64)
 
     z = _coerce_single_timestep(z, "z")
 
@@ -230,7 +229,7 @@ def integrate_prism_variable(sxda, return_per_layer=False):
 
     # Integrate!
     integrated = _integrate_nodal(
-        node_x, node_y, values.astype(np.float64), connectivity
+        node_x, node_y, values, connectivity
     )
 
     if return_per_layer:
@@ -305,7 +304,7 @@ def _calculate_volumes_uxarray(sxda, radius_m=None):
     grid = sxda.sxgrid
 
     z = _coerce_single_timestep(
-        grid.sgrid_info.zCoordinates.values.astype(np.float64), "z"
+        grid.sgrid_info.zCoordinates.values, "z"
     )
     connectivity = grid.face_node_connectivity.values
 
@@ -419,7 +418,7 @@ def _calculate_mass_in_ocean(sxda_salinity, sxda_temperature=None):
     values = rho_h.T  # (n_layer-1, n_node)
 
     integrated = _integrate_nodal(
-        node_x, node_y, values.astype(np.float64), connectivity
+        node_x, node_y, values, connectivity
     )
 
     return integrated

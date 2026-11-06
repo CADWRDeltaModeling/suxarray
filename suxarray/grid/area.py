@@ -26,11 +26,11 @@ def _integrate_triangle(x, y, z):
     """
     Integrate over a triangle using the three corner points.
     """
-    return (
-        np.abs((x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0]))
-        * np.array([z[i, :].mean() for i in range(z.shape[0])])
-        * 0.5
-    )
+    area_2 = np.abs((x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0]))
+    result = np.empty((z.shape[0],), dtype=z.dtype)
+    for k in range(z.shape[0]):
+        result[k] = 0.5 * area_2 * z[k, :].mean()
+    return result
 
 
 @njit(cache=True)
@@ -41,24 +41,27 @@ def _gauss_quadrature_points_order2():
 
 
 @njit(cache=True)
-def _shape_functions_quad_bilinear(xi, eta):
+def _shape_functions_quad_bilinear(xi, eta, z_dtype):
     return np.array(
         [
             0.25 * (1 - xi) * (1 - eta),
             0.25 * (1 + xi) * (1 - eta),
             0.25 * (1 + xi) * (1 + eta),
             0.25 * (1 - xi) * (1 + eta),
-        ]
+        ],
+        dtype=z_dtype,
     )
 
 
 @njit(cache=True)
-def _shape_functions_derivative_quad_bilinear(xi, eta):
+def _shape_functions_derivative_quad_bilinear(xi, eta, x_dtype):
     dxi = np.array(
         [-0.25 * (1 - eta), 0.25 * (1 - eta), 0.25 * (1 + eta), -0.25 * (1 + eta)],
+        dtype=x_dtype,
     )
     deta = np.array(
         [-0.25 * (1 - xi), -0.25 * (1 + xi), 0.25 * (1 + xi), 0.25 * (1 - xi)],
+        dtype=x_dtype,
     )
     return dxi, deta
 
@@ -68,15 +71,13 @@ def _integrate_quad(x, y, z):
     # points, weights = _gauss_quadrature_points_order2()
     points = np.array([[-0.577350269189626, 0.577350269189626]])
     weights = np.array([1.0, 1.0])
-    result = np.zeros((z.shape[0],))
+    result = np.zeros((z.shape[0],), dtype=z.dtype)
 
-    for i, wi in enumerate(weights):
-        for j, wj in enumerate(weights):
+    for i in range(2):
+        for j in range(2):
             xi, eta = points[0][i], points[0][j]
-            shape = _shape_functions_quad_bilinear(xi, eta)
-            dxi, deta = _shape_functions_derivative_quad_bilinear(xi, eta)
-
-            z_local = np.array([np.dot(shape, z[i, :]) for i in range(z.shape[0])])
+            shape = _shape_functions_quad_bilinear(xi, eta, z.dtype)
+            dxi, deta = _shape_functions_derivative_quad_bilinear(xi, eta, x.dtype)
 
             dx_dxi = np.dot(dxi, x)
             dy_dxi = np.dot(dxi, y)
@@ -84,15 +85,17 @@ def _integrate_quad(x, y, z):
             dy_deta = np.dot(deta, y)
 
             jacobian_det = np.abs(dx_dxi * dy_deta - dx_deta * dy_dxi)
-            result += wi * wj * z_local * jacobian_det
+            for k in range(z.shape[0]):
+                z_local = np.dot(shape, z[k, :])
+                result[k] += weights[i] * weights[j] * z_local * jacobian_det
 
     return result
 
 
 @njit(cache=True)
-def _integrate_nodal(node_x, node_y, values, connectivity):
+def _integrate_nodal_2d(node_x, node_y, values, connectivity):
     n_elements = connectivity.shape[0]
-    result = np.zeros((values.shape[0], n_elements))
+    result = np.zeros((values.shape[0], n_elements), dtype=values.dtype)
 
     for i in range(n_elements):
         # Select indices that are not negative
@@ -108,3 +111,14 @@ def _integrate_nodal(node_x, node_y, values, connectivity):
             result[:, i] = _integrate_quad(x, y, z)
 
     return result
+
+
+@njit(cache=True)
+def _integrate_nodal(node_x, node_y, values, connectivity):
+    if values.ndim == 1:
+        v_2d = np.empty((1, len(values)), dtype=values.dtype)
+        v_2d[0, :] = values
+        res_2d = _integrate_nodal_2d(node_x, node_y, v_2d, connectivity)
+        return res_2d[0]
+    else:
+        return _integrate_nodal_2d(node_x, node_y, values, connectivity)
