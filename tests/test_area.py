@@ -130,3 +130,83 @@ def test_integrate_nodal_mixed_tri_quad_float32():
     assert res_2d.shape == (2, 2)
     np.testing.assert_allclose(res_2d[0], [6.0, 12.0], rtol=1e-5)
     np.testing.assert_allclose(res_2d[1], [10.0, 20.0], rtol=1e-5)
+
+
+def test_planar_face_areas(sxds_test_dask):
+    """Test planar face_areas calculation and integration via UxArray native routines."""
+    grid = sxds_test_dask.sxgrid
+
+    # Check planar face areas are non-trivial physical areas (m^2)
+    face_areas = grid.face_areas
+    assert face_areas.ndim == 1
+    assert face_areas.shape[0] == grid.n_face
+    assert np.all(face_areas.values > 0.0)
+    assert grid.calculate_total_face_area() == pytest.approx(5429325.17, rel=1e-3)
+
+    # Test UxDataArray.topological_mean returning SxDataArray
+    da = sxds_test_dask.salinity.depth_average()
+    da_face = da.topological_mean(destination="face")
+    assert isinstance(da_face, sx.SxDataArray)
+    assert da_face.shape[-1] == grid.n_face
+
+    # Test UxDataArray.integrate on face-centered data
+    integral = da_face.integrate()
+    assert isinstance(integral, sx.SxDataArray)
+    assert integral.shape == (da.shape[0],)  # time dimension
+    valid_int = integral.values[~np.isnan(integral.values)]
+    assert len(valid_int) > 0
+    assert np.all(valid_int > 0.0)
+
+    # Test UxDataArray.weighted_mean on face-centered data
+    wmean = da_face.weighted_mean()
+    assert wmean.shape == (da.shape[0],)
+    valid_wmean = wmean.values[~np.isnan(wmean.values)]
+    assert len(valid_wmean) > 0
+    assert np.all(valid_wmean > 0.0)
+
+
+def test_spherical_coordinate_handling():
+    """Test that a spherical (geographic) grid is recognized and handled gracefully."""
+    # Create a synthetic UGRID dataset in spherical coordinates (degrees)
+    node_lon = np.array([0.0, 10.0, 10.0, 0.0], dtype=np.float64)
+    node_lat = np.array([0.0, 0.0, 10.0, 10.0], dtype=np.float64)
+    face_nodes = np.array([[0, 1, 2, 3]], dtype=np.int64)
+
+    ds_sph = xr.Dataset(
+        data_vars={
+            "SCHISM_hgrid": xr.DataArray(
+                1,
+                attrs={
+                    "cf_role": "mesh_topology",
+                    "topology_dimension": 2,
+                    "node_coordinates": "SCHISM_hgrid_node_lon SCHISM_hgrid_node_lat",
+                    "face_node_connectivity": "SCHISM_hgrid_face_nodes",
+                },
+            ),
+            "SCHISM_hgrid_face_nodes": xr.DataArray(
+                face_nodes,
+                dims=["nSCHISM_hgrid_face", "nMaxSCHISM_hgrid_face_nodes"],
+                attrs={"start_index": 0, "_FillValue": -1},
+            ),
+            "SCHISM_hgrid_node_lon": xr.DataArray(
+                node_lon,
+                dims=["nSCHISM_hgrid_node"],
+                attrs={"units": "degrees_east", "standard_name": "longitude"},
+            ),
+            "SCHISM_hgrid_node_lat": xr.DataArray(
+                node_lat,
+                dims=["nSCHISM_hgrid_node"],
+                attrs={"units": "degrees_north", "standard_name": "latitude"},
+            ),
+        }
+    )
+
+    grid_sph = sx.read_grid(ds_sph)
+    assert not grid_sph.is_planar
+    # Spherical face_areas uses UxArray's spherical quadrature
+    areas_sph = grid_sph.face_areas
+    assert areas_sph.shape == (1,)
+    assert areas_sph.values[0] > 0.0
+
+
+
