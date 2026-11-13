@@ -29,54 +29,6 @@ def _coerce_single_timestep(arr, name):
     )
 
 
-def _earth_radius_at_latitude(latitude_deg):
-    """Compute geocentric Earth radius (meters) at geodetic latitude.
-
-    Uses the WGS84 ellipsoid semi-major/minor axes.
-    """
-    # WGS84 ellipsoid axes (meters)
-    a = 6378137.0
-    b = 6356752.314245
-
-    lat = np.deg2rad(latitude_deg)
-    cos_lat = np.cos(lat)
-    sin_lat = np.sin(lat)
-
-    a2 = a * a
-    b2 = b * b
-
-    numerator = (a2 * cos_lat) ** 2 + (b2 * sin_lat) ** 2
-    denominator = (a * cos_lat) ** 2 + (b * sin_lat) ** 2
-    return np.sqrt(numerator / denominator)
-
-
-def _face_mean_from_nodal(values, connectivity):
-    """Average nodal values onto faces.
-
-    Parameters
-    ----------
-    values : ndarray, shape (n_node, n_interface)
-        Nodal values to average.
-    connectivity : ndarray, shape (n_face, n_max_face_nodes)
-        Face-node connectivity with negative fill values.
-
-    Returns
-    -------
-    ndarray, shape (n_interface, n_face)
-        Face-averaged values.
-    """
-    n_node, n_interface = values.shape
-    n_face = connectivity.shape[0]
-    face_mean = np.zeros((n_interface, n_face), dtype=values.dtype)
-
-    for face_i in range(n_face):
-        node_ids = connectivity[face_i]
-        node_ids = node_ids[node_ids >= 0]
-        face_mean[:, face_i] = values[node_ids, :].mean(axis=0)
-
-    return face_mean
-
-
 def _calc_layers_thickness(z, bottom_indices):
     """
     Calculate the thickness of each layer under a set of nodes.

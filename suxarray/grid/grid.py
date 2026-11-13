@@ -6,6 +6,8 @@ from xarray.core.utils import UncachedAccessor
 from suxarray.io._schismgrid import _read_schism_grid
 from suxarray.subset import GridSubsetAccessor
 from suxarray.grid.neighbors import STRTree
+from suxarray.grid.area import _compute_planar_face_areas
+from uxarray.conventions.descriptors import FACE_AREAS_ATTRS, FACE_AREAS_DIMS
 
 
 class Grid(ux.Grid):
@@ -102,6 +104,64 @@ class Grid(ux.Grid):
         if self.sgrid_info:
             sgrid_new = sgrid_new.sgrid_isel(**dim_kwargs)
         return sgrid_new
+
+    @property
+    def is_planar(self) -> bool:
+        """Return True if this grid uses a planar (Cartesian) coordinate system.
+
+        Returns False if the grid represents spherical (geographic) coordinates.
+        """
+        # If node_x and node_y exist, check their attributes
+        if "node_x" in self._ds and "node_y" in self._ds:
+            nx = self._ds["node_x"]
+            units = str(nx.attrs.get("units", "")).lower()
+            std_name = str(nx.attrs.get("standard_name", "")).lower()
+            if "degree" in units or "longitude" in std_name:
+                return False
+            # If coordinates are normalized on the unit sphere, it's not a planar grid
+            if getattr(self, "_normalized", False):
+                return False
+            return True
+
+        return False
+
+    @property
+    def face_areas(self) -> xr.DataArray:
+        """Area of each face.
+
+        For planar grids (with projected Cartesian coordinates), returns planar
+        polygon area in coordinate units squared (typically m^2).
+        For spherical grids, delegates to UxArray's spherical quadrature.
+
+        Returns
+        -------
+        face_areas: :py:class:`xr.DataArray`
+            An array of shape (:py:attr:`~suxarray.Grid.n_face`,)
+        """
+        if "face_areas" not in self._ds:
+            if self.is_planar:
+                areas = _compute_planar_face_areas(
+                    self.node_x.values,
+                    self.node_y.values,
+                    self.face_node_connectivity.values,
+                )
+                self._ds["face_areas"] = xr.DataArray(
+                    data=areas, dims=FACE_AREAS_DIMS, attrs=FACE_AREAS_ATTRS
+                )
+            else:
+                return super().face_areas
+
+        return self._ds["face_areas"]
+
+    def compute_face_areas(self, *args, **kwargs):
+        """Compute face areas for suxarray Grid."""
+        if self.is_planar:
+            return self.face_areas.values, None
+        return super().compute_face_areas(*args, **kwargs)
+
+    def calculate_total_face_area(self, *args, **kwargs) -> float:
+        """Total face area of the grid."""
+        return float(self.face_areas.sum().values)
 
     def sgrid_isel(self, **kwargs):
         from uxarray.constants import GRID_DIMS

@@ -22,6 +22,71 @@ def _face_area_tri3(x, y):
 
 
 @njit(cache=True)
+def _face_area_quad4(x, y):
+    """Calculate the planar area of a quadrilateral with four nodes using the shoelace formula.
+
+    Parameters
+    ----------
+    x : ndarray, required
+        x coordinates of the quad nodes (ordered CCW or CW)
+    y : ndarray, required
+        y coordinates of the quad nodes (ordered CCW or CW)
+
+    Returns
+    -------
+    float
+        area of the quadrilateral
+    """
+    return 0.5 * np.abs(
+        (x[0] * y[1] + x[1] * y[2] + x[2] * y[3] + x[3] * y[0])
+        - (y[0] * x[1] + y[1] * x[2] + y[2] * x[3] + y[3] * x[0])
+    )
+
+
+@njit(cache=True)
+def _compute_planar_face_areas(node_x, node_y, connectivity):
+    """Compute 2D planar face areas for all elements (triangles and quads).
+
+    Parameters
+    ----------
+    node_x : ndarray
+        x coordinates of all nodes
+    node_y : ndarray
+        y coordinates of all nodes
+    connectivity : ndarray
+        Face-node connectivity with negative fill values for triangles
+
+    Returns
+    -------
+    ndarray
+        Array of shape (n_face,) with planar areas in m^2 (or coordinate units^2)
+    """
+    n_face = connectivity.shape[0]
+    areas = np.empty(n_face, dtype=np.float64)
+
+    for i in range(n_face):
+        element = connectivity[i, connectivity[i] >= 0]
+        n = len(element)
+        x = node_x[element]
+        y = node_y[element]
+
+        if n == 3:
+            areas[i] = _face_area_tri3(x, y)
+        elif n == 4:
+            areas[i] = _face_area_quad4(x, y)
+        else:
+            # General polygon shoelace formula
+            area = 0.0
+            for j in range(n):
+                j_next = (j + 1) % n
+                area += x[j] * y[j_next] - y[j] * x[j_next]
+            areas[i] = 0.5 * np.abs(area)
+
+    return areas
+
+
+
+@njit(cache=True)
 def _integrate_triangle(x, y, z):
     """
     Integrate over a triangle using the three corner points.

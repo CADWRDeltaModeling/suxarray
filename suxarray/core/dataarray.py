@@ -83,17 +83,31 @@ class SxDataArray(uxarray.UxDataArray):
         name = f"depth_averaged_{self.name}"
         return SxDataArray(da_da, sxgrid=self.sxgrid, name=name)
 
+    def topological_mean(
+        self,
+        destination: str,
+        **kwargs,
+    ) -> SxDataArray:
+        """Performs a topological mean aggregation, returning an SxDataArray."""
+        uxda = super().topological_mean(destination=destination, **kwargs)
+        return SxDataArray(uxda, sxgrid=self.sxgrid)
+
     def integrate(
         self, quadrature_rule: Optional[str] = "triangular", order: Optional[int] = 2
     ) -> SxDataArray:
         if self.shape[-1] == self.sxgrid.n_face:
-            return super().integrate(quadrature_rule=quadrature_rule, order=order)
+            res = super().integrate(quadrature_rule=quadrature_rule, order=order)
+            return SxDataArray(res, sxgrid=self.sxgrid)
         elif self.shape[-1] == self.sxgrid.n_edge:
             raise ValueError("Integrate is not supported for edge values")
         elif self.shape[-1] == self.sxgrid.n_node:
             # If there is a vertical dimension, n_layer, raise an error for now
             if "n_layer" in self.dims:
                 raise ValueError("Integrate is not supported for 3D nodal values yet.")
+            elif not self.sxgrid.is_planar:
+                # For spherical grids, integrate by averaging nodal values onto faces first
+                face_mean = self.topological_mean(destination="face")
+                return face_mean.integrate(quadrature_rule=quadrature_rule, order=order)
             else:
                 integral = xr.apply_ufunc(
                     _integrate_nodal,
@@ -125,3 +139,4 @@ class SxDataArray(uxarray.UxDataArray):
             return sxda
         else:
             raise ValueError("None of dimensions match the grid information")
+

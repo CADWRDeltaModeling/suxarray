@@ -31,8 +31,12 @@ class STRTree:
     @property
     def points(self):
         if self._nodes is None:
-            p_x = self._grid.node_x
-            p_y = self._grid.node_y
+            if self._grid.is_planar:
+                p_x = self._grid.node_x
+                p_y = self._grid.node_y
+            else:
+                p_x = self._grid.node_lon
+                p_y = self._grid.node_lat
             self._nodes = xr.apply_ufunc(
                 lambda x, y: Point(x, y),
                 p_x,
@@ -46,8 +50,12 @@ class STRTree:
     def faces(self):
         if self._faces is None:
             # If the spatial tree is not built yet, build it
-            p_x = self._grid.node_x
-            p_y = self._grid.node_y
+            if self._grid.is_planar:
+                p_x = self._grid.node_x
+                p_y = self._grid.node_y
+            else:
+                p_x = self._grid.node_lon
+                p_y = self._grid.node_lat
             fill_value = self._grid.face_node_connectivity.attrs["_FillValue"]
 
             def create_polygon(node_indices):

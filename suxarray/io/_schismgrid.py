@@ -227,10 +227,46 @@ def _find_grid_topology_varname(ds: xr.Dataset) -> str:
     return grid_topology_name
 
 
+def _is_planar_topology(ds: xr.Dataset) -> bool:
+    """Determine if a SCHISM/UGRID dataset uses a planar (projected Cartesian) coordinate system.
+
+    Returns True if node coordinates represent projected coordinates (x/y in meters),
+    False if they already represent spherical coordinates (longitude/latitude in degrees).
+    """
+    try:
+        topo_var = _find_grid_topology_varname(ds)
+        node_coords = ds[topo_var].attrs.get("node_coordinates", "").split()
+    except (IndexError, KeyError):
+        node_coords = []
+
+    if not node_coords:
+        # Fallback: check presence of spherical coordinate variables
+        if "SCHISM_hgrid_node_lon" in ds or "node_lon" in ds:
+            return False
+        return True
+
+    x_name = node_coords[0]
+    if x_name in ds:
+        var = ds[x_name]
+        units = str(var.attrs.get("units", "")).lower()
+        std_name = str(var.attrs.get("standard_name", "")).lower()
+        if (
+            "degree" in units
+            or "longitude" in std_name
+            or "lon" in x_name.lower()
+        ):
+            return False
+
+    return True
+
+
 def _transform_coordinates(
     ds: xr.Dataset, epsg_source: Optional[str] = None
 ) -> xr.Dataset:
     """Transform coordinates from a local projection to global geographic coordinates.
+
+    If the grid dataset is already in spherical coordinates (longitude/latitude),
+    transformation is bypassed and the dataset is returned as-is.
 
     Coordinate names are found from the UGRID grid topology information. The new
     coordinates will be named node_lon, node_lat, edge_lon, edge_lat, face_lon,
@@ -246,8 +282,11 @@ def _transform_coordinates(
     Returns
     -------
     xr.Dataset
-        SCHISM grid dataset with transformed coordinates
+        SCHISM grid dataset with geographic coordinates
     """
+    if not _is_planar_topology(ds):
+        return ds
+
     if epsg_source is None:
         # The default projection is UTM zone 10N
         epsg_source = "EPSG:26910"
