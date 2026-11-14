@@ -58,6 +58,47 @@ def test_read_schism_nc_preserves_attrs():
     assert "salinity" in sxds
 
 
+def test_open_ts_dataset():
+    """Test opening a time series dataset with open_ts_dataset."""
+    p_cur = Path(__file__).parent.absolute()
+    ds = sx.core.api.open_ts_dataset(str(p_cur / "testdata/salinity_1.nc"))
+    assert "salinity" in ds
+    assert ds["salinity"].dtype == np.float32
+    assert np.issubdtype(ds["time"].dtype, np.datetime64)
+    assert ds.time.size == 48
+
+
+def test_read_schism_nc_preserves_native_dtype():
+    """Test that read_schism_nc preserves native float32 dtype without where-masking."""
+    p_cur = Path(__file__).parent.absolute()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    grid = sx.read_grid(ds_out2d, ds_zcoords)
+
+    # Open with chunks to ensure Dask arrays are used
+    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"), chunks={"time": 12})
+    sxds = sx.read_schism_nc(grid, ds_data)
+
+    assert sxds["salinity"].dtype == np.float32
+    # Verify no where tasks were injected into the Dask graph
+    dask_keys = [str(k) for k in sxds["salinity"].data.dask.keys()]
+    assert not any("where" in k for k in dask_keys)
+
+
+def test_open_grid_preserves_native_dtype():
+    """Test that open_grid preserves native float32 dtype on zCoordinates without where-masking."""
+    p_cur = Path(__file__).parent.absolute()
+    path_out2d = str(p_cur / "testdata/out2d_1.nc")
+    path_zcoords = str(p_cur / "testdata/zCoordinates_1.nc")
+    chunks = {"time": 12}
+    grid = sx.core.api.open_grid(path_out2d, path_zcoords, chunks=chunks)
+
+    z = grid.sgrid_info.zCoordinates
+    assert z.dtype == np.float32
+    dask_keys = [str(k) for k in z.data.dask.keys()]
+    assert not any("where" in k for k in dask_keys)
+
+
 def test_read_hgrid_gr3():
     """Test read_hgrid_gr3"""
     # Test with a HelloSCHISM v5.10 hgrid.gr3 file

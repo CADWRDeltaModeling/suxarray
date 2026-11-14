@@ -16,23 +16,6 @@ from suxarray.io._schismgrid import (
 )
 from suxarray.conventions.schism_grid import SCHISM_GRID_TIME_VARIABLES_IN_OUT2D
 
-def _safe_mask_dataset(ds: xr.Dataset) -> xr.Dataset:
-    """Mask missing/fill values on float variables while preserving native dtypes (e.g. float32).
-
-    Leaves integer variables untouched so connectivity arrays with _FillValue=-1
-    remain integer, and avoids xarray CFMaskCoder upcasting float32 to float64.
-    """
-    for varname in list(ds.data_vars.keys()):
-        da = ds[varname]
-        if np.issubdtype(da.dtype, np.floating):
-            fill_val = da.attrs.get("_FillValue", da.encoding.get("_FillValue", None))
-            missing_val = da.attrs.get("missing_value", da.encoding.get("missing_value", None))
-            for fv in (fill_val, missing_val):
-                if fv is not None and not np.isnan(fv):
-                    ds[varname] = da.where(da != fv)
-    return ds
-
-
 def open_ts_dataset(
     nc_file_path: Union[str, os.PathLike, Path],
     ref_time: Optional[pd.Timestamp] = None,
@@ -59,7 +42,6 @@ def open_ts_dataset(
             ds.time.attrs["units"] = f"seconds since {ref_time.isoformat()}"
             ds = xr.decode_cf(ds, mask_and_scale=False)
 
-    ds = _safe_mask_dataset(ds)
     return ds
 
 def _choose_netcdf_engine() -> str:
@@ -77,7 +59,6 @@ def _choose_netcdf_engine() -> str:
 
 
 def read_schism_nc(grid: Grid, ds_data: xr.Dataset) -> SxDataset:
-    ds_data = _safe_mask_dataset(ds_data)
     ds_data = ux.core.utils._map_dims_to_ugrid(ds_data, grid._source_dims_dict, grid)
     if "nSCHISM_vgrid_layers" in ds_data.dims:
         ds_data = ds_data.swap_dims({"nSCHISM_vgrid_layers": "n_layer"})
@@ -173,7 +154,6 @@ def open_grid(
             data_vars="minimal",
             compat="override",
         )
-        ds_zcoords = _safe_mask_dataset(ds_zcoords)
     else:
         ds_zcoords = None
 
