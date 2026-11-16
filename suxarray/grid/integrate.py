@@ -1,5 +1,43 @@
 import numpy as np
+from numba import njit
 from .area import _integrate_nodal
+
+
+@njit(cache=True)
+def _calc_prism_layer_values(var_arr, z, bottom_indices):
+    """Compute (var_layer * thickness).T using bottom_indices.
+
+    Subsurface layers below bottom_indices[i] remain 0.0 without
+    multiplying NaNs or evaluating differences below the seabed.
+
+    Parameters
+    ----------
+    var_arr : ndarray, shape (n_node, n_layer)
+        Variable values at nodes and vertical levels.
+    z : ndarray, shape (n_node, n_layer)
+        z-coordinates of nodes and vertical levels.
+    bottom_indices : ndarray, shape (n_node,)
+        0-based bottom layer index for each node.
+
+    Returns
+    -------
+    ndarray, shape (n_layer-1, n_node)
+        Integrated nodal values per layer interval (transposed for quadrature).
+    """
+    n_node, n_layer = var_arr.shape
+    n_interface = n_layer - 1
+    values = np.zeros((n_interface, n_node), dtype=var_arr.dtype)
+
+    for i in range(n_node):
+        k_start = bottom_indices[i]
+        if k_start < 0:
+            k_start = 0
+        for k in range(k_start, n_interface):
+            th = z[i, k + 1] - z[i, k]
+            v = 0.5 * (var_arr[i, k] + var_arr[i, k + 1])
+            values[k, i] = v * th
+
+    return values
 
 
 def _coerce_single_timestep(arr, name):
@@ -170,14 +208,12 @@ def integrate_prism_variable(sxda, return_per_layer=False):
     connectivity = grid.face_node_connectivity.values
     z = _coerce_single_timestep(grid.sgrid_info.zCoordinates.values, "z")
     bottom_indices = grid.sgrid_info.bottom_index_node.values - 1
-    thickness = _calc_layers_thickness(z, bottom_indices)
 
     # Pull variable to integrate from sxda
     var_arr = _coerce_single_timestep(sxda.values, "variable")
 
-    # Average variable to layer intervals: shape (n_node, n_layer-1)
-    var_layer = 0.5 * (var_arr[:, :-1] + var_arr[:, 1:])
-    values = (var_layer * thickness).T
+    # Values at each layer interval: shape (n_layer-1, n_node)
+    values = _calc_prism_layer_values(var_arr, z, bottom_indices)
 
     # Integrate!
     integrated = _integrate_nodal(
@@ -209,13 +245,13 @@ def calc_volumes_from_projected(sxda):
     Notes
     -----
     For external dask/xarray parallelization over time, use
-    ``calc_volumes_from_projected_kernel`` with ``xarray.apply_ufunc``.
+    ``projected_volume_ufunc_kernel`` with ``xarray.apply_ufunc``.
     """
     if not hasattr(sxda, "sxgrid"):
         raise TypeError(
             "calc_volumes_from_projected expects an SxDataArray (with .sxgrid)."
             "If you are using xarray.apply_ufunc(..., dask='parallelized'), "
-            "use calc_volumes_from_projected_kernel on z-coordinate array "
+            "use projected_volume_ufunc_kernel on z-coordinate array "
             "blocks and pass grid arrays (node_x, node_y, connectivity, "
             "bottom_indices) as static arguments."
         )
@@ -353,21 +389,13 @@ def _calculate_mass_in_ocean(sxda_salinity, sxda_temperature=None):
     # density: shape (n_node, n_layer)
     rho = gsw.density.rho(SA, CT, pressure)
 
-    # Average density to layer intervals: shape (n_node, n_layer-1)
-    rho_layer = 0.5 * (rho[:, :-1] + rho[:, 1:])
-
-    # Thickness per layer interval: shape (n_node, n_layer-1)
+    # Thickness per layer interval and rho_h: shape (n_layer-1, n_node)
     bottom_indices = grid.sgrid_info.bottom_index_node.values - 1
+    values = _calc_prism_layer_values(rho, z, bottom_indices).astype(np.float64)
 
-    thickness = _calc_layers_thickness(z, bottom_indices)
-
-    # rho * h at each node per layer: shape (n_node, n_layer-1)
-    rho_h = rho_layer * thickness
     connectivity = grid.face_node_connectivity.values
     node_x = grid.node_x.values.astype(np.float64)
     node_y = grid.node_y.values.astype(np.float64)
-
-    values = rho_h.T  # (n_layer-1, n_node)
 
     integrated = _integrate_nodal(
         node_x, node_y, values, connectivity
