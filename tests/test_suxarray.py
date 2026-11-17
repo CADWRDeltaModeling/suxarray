@@ -189,7 +189,7 @@ def test_depth_average(sxds_test_dask):
     da = sxds_test_dask["salinity"].depth_average()
     assert da.dtype == np.float32
     # The value is calculated from VisIt
-    assert da.sel(n_node=439).values[0] == pytest.approx(11.961535, abs=1e-5)
+    assert da.isel(n_node=439, ignore_grid=True).values[0] == pytest.approx(11.961535, abs=1e-5)
 
 
 def test_slice_and_depth_average(sxds_test_dask):
@@ -206,7 +206,7 @@ def test_slice_and_depth_average(sxds_test_dask):
     da_da = da_subset.depth_average()
     assert da_da.dtype == np.float32
     # Node 186 is now 7
-    assert da_da.sel(n_node=7).values[0] == pytest.approx(10.334445, abs=1e-5)
+    assert da_da.isel(n_node=7, ignore_grid=True).values[0] == pytest.approx(10.334445, abs=1e-5)
 
 
 # def test_interpolate_xy(sxds_test_dask):

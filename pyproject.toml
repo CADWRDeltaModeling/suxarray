@@ -7,7 +7,7 @@ name = "suxarray"
 version = "2025.6.0"
 description = "uxarray extension for SCHISM."
 readme = "README.rst"
-requires-python = ">=3.8,<3.13"
+requires-python = ">=3.12"
 authors = [
     { name = "California Department of Water Resources", email = "knam@water.ca.gov" },
 ]
@@ -19,14 +19,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "uxarray==2025.12.0",
+    "uxarray==2026.10.1",
     "shapely>=2.0",
     "gsw>=3.6", # required for density -> mass calculations in `integrate.py`
     "Click>=7.0"

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Mapping, Any
 import numpy as np
 import xarray as xr
 from xarray.core.utils import UncachedAccessor
@@ -34,10 +34,27 @@ class SxDataArray(uxarray.UxDataArray):
     def sxgrid(self) -> Grid:
         return self.uxgrid
 
-    def isel(self, ignore_grid=False, *args, **kwargs):
-        da_new = super().isel(ignore_grid=ignore_grid, *args, **kwargs)
+    def isel(
+        self,
+        indexers: Mapping[Any, Any] | None = None,
+        drop: bool = False,
+        missing_dims: str = "raise",
+        ignore_grid: bool = False,
+        inverse_indices: bool = False,
+        **indexers_kwargs,
+    ):
+        da_new = super().isel(
+            indexers=indexers,
+            drop=drop,
+            missing_dims=missing_dims,
+            ignore_grid=ignore_grid,
+            inverse_indices=inverse_indices,
+            **indexers_kwargs,
+        )
         if not ignore_grid and self.uxgrid.sgrid_info is not None:
-            da_new.uxgrid = da_new.uxgrid.sgrid_isel(**kwargs)
+            idx = indexers.copy() if indexers else {}
+            idx.update(indexers_kwargs)
+            da_new.uxgrid = da_new.uxgrid.sgrid_isel(**idx)
         return da_new
 
     def depth_average(self) -> SxDataArray:
