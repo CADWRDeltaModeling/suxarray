@@ -175,11 +175,11 @@ class Grid(ux.Grid):
             sgrid_info = self.sgrid_info.copy()
 
         # Need to subset (or slice) sgrid_info
-        if "subgrid_node_indices" in self._ds:
+        if "_subgrid_node_indices" in self._ds and "_subgrid_face_indices" in self._ds:
             sgrid_info = sgrid_info.isel(
-                n_node=self._ds["subgrid_node_indices"],
-                n_face=self._ds["subgrid_face_indices"],
-                # n_edge=self._ds["subgrid_edge_indices"],
+                n_node=self._ds["_subgrid_node_indices"],
+                n_face=self._ds["_subgrid_face_indices"],
+                # n_edge=self._ds["_subgrid_edge_indices"],
             )
 
         return Grid(self, ds_sgrid_info=sgrid_info)
