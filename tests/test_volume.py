@@ -226,8 +226,14 @@ def test_integrate_prism_variable_real_data():
 
     # Single-timestep selection
     sal_t0 = sxds.salinity.isel(time=0)
+    assert sal_t0.dtype == np.float32
+
     res_total = integrate_prism_variable(sal_t0, return_per_layer=False)
     res_layers = integrate_prism_variable(sal_t0, return_per_layer=True)
+
+    # Ensure native float32 dtype is preserved
+    assert res_total.dtype == np.float32
+    assert res_layers.dtype == np.float32
 
     # Ensure no NaN leakage
     assert not np.isnan(res_total).any()

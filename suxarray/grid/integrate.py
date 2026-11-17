@@ -118,10 +118,6 @@ def _calculate_prism_volumes(node_x, node_y, z, connectivity, bottom_indices):
     ndarray, shape (n_layer-1, n_face).
         Prism volumes per layer and face.
     """
-    # Ensure coordinate arrays are float64 for geometric accuracy
-    node_x = np.asarray(node_x, dtype=np.float64)
-    node_y = np.asarray(node_y, dtype=np.float64)
-
     z = _coerce_single_timestep(z, "z")
 
     # Calculate thickness of layers under our given nodes
@@ -203,8 +199,8 @@ def integrate_prism_variable(sxda, return_per_layer=False):
     grid = sxda.sxgrid
 
     # Extract grid properties
-    node_x = grid.node_x.values.astype(np.float64)
-    node_y = grid.node_y.values.astype(np.float64)
+    node_x = grid.node_x.values
+    node_y = grid.node_y.values
     connectivity = grid.face_node_connectivity.values
     z = _coerce_single_timestep(grid.sgrid_info.zCoordinates.values, "z")
     bottom_indices = grid.sgrid_info.bottom_index_node.values - 1
@@ -391,11 +387,11 @@ def _calculate_mass_in_ocean(sxda_salinity, sxda_temperature=None):
 
     # Thickness per layer interval and rho_h: shape (n_layer-1, n_node)
     bottom_indices = grid.sgrid_info.bottom_index_node.values - 1
-    values = _calc_prism_layer_values(rho, z, bottom_indices).astype(np.float64)
+    values = _calc_prism_layer_values(rho, z, bottom_indices)
 
     connectivity = grid.face_node_connectivity.values
-    node_x = grid.node_x.values.astype(np.float64)
-    node_y = grid.node_y.values.astype(np.float64)
+    node_x = grid.node_x.values
+    node_y = grid.node_y.values
 
     integrated = _integrate_nodal(
         node_x, node_y, values, connectivity
