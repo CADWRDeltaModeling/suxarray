@@ -26,6 +26,7 @@ dependencies = [
     "uxarray==2026.10.1",
     "shapely>=2.0",
     "gsw>=3.6", # required for density -> mass calculations in `integrate.py`
+    "h5netcdf[h5py]",
     "pyproj",
     "Click>=7.0"
 ]

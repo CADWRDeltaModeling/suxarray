@@ -10,6 +10,7 @@ os.environ.setdefault("HDF5_USE_FILE_LOCKING", "FALSE")
 import click
 import numpy as np
 import suxarray as sx
+from suxarray.core.api import _choose_netcdf_engine
 import xarray as xr
 
 
@@ -77,7 +78,9 @@ def calculate_depth_average(
 
     logger.info("Reading SCHISM grid and variable files...")
     grid = sx.open_grid(out2d, zcoord, chunks=chunks)
-    ds_var = xr.open_dataset(var_nc, chunks=chunks).astype(np.float64)
+    ds_var = xr.open_dataset(
+        var_nc, engine=_choose_netcdf_engine(), chunks=chunks
+    ).astype(np.float64)
     sx_ds = sx.read_schism_nc(grid, ds_var)
 
     path_depth_averaged_var = output_dir / f"depth_averaged_{varname}_{fnumber}.nc"

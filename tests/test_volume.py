@@ -6,6 +6,7 @@ import uxarray as ux
 import xarray as xr
 
 import suxarray as sx
+from suxarray.core.api import _choose_netcdf_engine
 from suxarray.grid.integrate import (
     _calculate_mass_in_ocean,
     _calculate_prism_volumes,
@@ -214,10 +215,11 @@ def test_integrate_prism_variable_synthetic_with_nans_and_quads():
 def test_integrate_prism_variable_real_data():
     """Validate integrate_prism_variable with real SCHISM output containing NaNs."""
     p_cur = Path(__file__).parent.absolute()
-    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    engine = _choose_netcdf_engine()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"), engine=engine)
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"), engine=engine)
     grid = sx.read_grid(ds_out2d, ds_zcoords)
-    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"))
+    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"), engine=engine)
     sxds = sx.read_schism_nc(grid, ds_data)
 
     # Multi-timestep input raises ValueError
@@ -252,10 +254,11 @@ def test_integrate_prism_variable_real_data():
 def test_calculate_mass_in_ocean_real_data():
     """Validate _calculate_mass_in_ocean with real SCHISM output containing NaNs."""
     p_cur = Path(__file__).parent.absolute()
-    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    engine = _choose_netcdf_engine()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"), engine=engine)
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"), engine=engine)
     grid = sx.read_grid(ds_out2d, ds_zcoords)
-    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"))
+    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"), engine=engine)
     sxds = sx.read_schism_nc(grid, ds_data)
 
     sal_t0 = sxds.salinity.isel(time=0)

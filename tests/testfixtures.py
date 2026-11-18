@@ -3,6 +3,7 @@ import numpy as np
 import xarray as xr
 import pytest
 import suxarray as sx
+from suxarray.core.api import _choose_netcdf_engine
 
 
 @pytest.fixture(scope="module")
@@ -25,7 +26,10 @@ def sxds_test_dask():
     sxgrid = sx.core.api.open_grid(path_out2d, path_zcoords, chunks=chunks)
     path_var = [str(p_cur / "testdata/salinity_{}.nc".format(i)) for i in range(1, 3)]
     ds_salinity = xr.open_mfdataset(
-        path_var, mask_and_scale=False, data_vars="minimal"
+        path_var,
+        engine=_choose_netcdf_engine(),
+        mask_and_scale=False,
+        data_vars="minimal",
     )
     sxds = sx.read_schism_nc(sxgrid, ds_salinity)
     return sxds
@@ -44,7 +48,10 @@ def sxds_element_test():
     path_var = [str(p_cur / "testdata/verticalVelAtElement_{}.nc".format(i))
                 for i in range(1, 3)]
     ds_vertVel = xr.open_mfdataset(
-        path_var, mask_and_scale=False, data_vars="minimal"
+        path_var,
+        engine=_choose_netcdf_engine(),
+        mask_and_scale=False,
+        data_vars="minimal",
     )
     sxds = sx.read_schism_nc(sxgrid, ds_vertVel)
     return sxds

@@ -127,7 +127,11 @@ def process_single_day(
         try:
             chunks = {"time": time_chunks}
             grid = sx.open_grid(out2d, zcoord, chunks=chunks)
-            ds_var = xr.open_dataset(var_nc, chunks=chunks).astype(np.float64)
+            ds_var = xr.open_dataset(
+                var_nc,
+                engine=sx.core.api._choose_netcdf_engine(),
+                chunks=chunks,
+            ).astype(np.float64)
             sx_ds = sx.read_schism_nc(grid, ds_var)
 
             # Node depth-average

@@ -14,6 +14,7 @@ import click
 import numpy as np
 import pandas as pd
 import suxarray as sx
+from suxarray.core.api import _choose_netcdf_engine
 import xarray as xr
 
 
@@ -64,7 +65,7 @@ def get_face_areas(
         Planar face areas in square meters (m^2).
     """
     ds_out2d = (
-        xr.open_dataset(path_out2d)
+        xr.open_dataset(path_out2d, engine=_choose_netcdf_engine())
         .drop_dims("time", errors="ignore")
         .drop_vars(["bottom_index_node"], errors="ignore")
     )
@@ -102,7 +103,9 @@ def calc_lsz_single(
 
     # 1. Read processed depth-average salinity at face
     logger.info("Reading postprocessed depth-averaged salinity at face from %s...", path_salinity_nc)
-    ds_salinity = xr.open_dataset(path_salinity_nc, chunks=chunks)
+    ds_salinity = xr.open_dataset(
+        path_salinity_nc, engine=_choose_netcdf_engine(), chunks=chunks
+    )
     da_depth_averaged_salinity_at_face = ds_salinity["depth_averaged_salinity_at_face"]
 
     # Identify face dimension in salinity array
@@ -110,7 +113,7 @@ def calc_lsz_single(
 
     # 2. Read subregion masks
     logger.info("Reading subregion data from %s...", subregion_fn)
-    ds_subregions = xr.open_dataset(subregion_fn)
+    ds_subregions = xr.open_dataset(subregion_fn, engine=_choose_netcdf_engine())
     subregion_face_dim = next(iter(ds_subregions.sizes.keys()))
     if subregion_face_dim != face_dim:
         ds_subregions = ds_subregions.rename({subregion_face_dim: face_dim})

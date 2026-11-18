@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from suxarray.core.api import _choose_netcdf_engine
 from suxarray.io._schismgrid import (
     _calculate_edge_z,
     _calculate_face_z,
@@ -48,8 +49,9 @@ EDGE_NODES = [0, 1]
 def calc_inputs():
     """Prepare processed ds_out2d and ds_zcoords ready for the calculation
     functions, mirroring the pre-processing done inside _read_schism_grid."""
-    ds_out2d_raw = xr.open_dataset(str(TESTDATA / "out2d_1.nc"))
-    ds_zcoords_raw = xr.open_dataset(str(TESTDATA / "zCoordinates_1.nc"))
+    engine = _choose_netcdf_engine()
+    ds_out2d_raw = xr.open_dataset(str(TESTDATA / "out2d_1.nc"), engine=engine)
+    ds_zcoords_raw = xr.open_dataset(str(TESTDATA / "zCoordinates_1.nc"), engine=engine)
 
     # Process out2d the same way _read_schism_grid does
     ds_out2d = ds_out2d_raw.drop_dims("time")

@@ -29,7 +29,12 @@ def open_ts_dataset(
     Returns:
     xarray.Dataset: The dataset read from the NetCDF file.
     """
-    ds = xr.open_dataset(nc_file_path, decode_times=False, mask_and_scale=False)
+    ds = xr.open_dataset(
+        nc_file_path,
+        engine=_choose_netcdf_engine(),
+        decode_times=False,
+        mask_and_scale=False,
+    )
     if "time" in ds:
         if "units" in ds.time.attrs:
             origin = parse(
@@ -52,6 +57,7 @@ def _choose_netcdf_engine() -> str:
     """
     try:
         import h5netcdf  # noqa: F401
+        import h5py  # noqa: F401
 
         return "h5netcdf"
     except ImportError:

@@ -4,14 +4,16 @@ import xarray as xr
 import pytest
 from shapely.geometry import Polygon, Point
 import suxarray as sx
+from suxarray.core.api import _choose_netcdf_engine
 from .testfixtures import *
 
 
 def test_read_grid():
     """Test opening a SCHISM grid i3nfo from a SCHISM netCDF file"""
     p_cur = Path(__file__).parent.absolute()
-    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    engine = _choose_netcdf_engine()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"), engine=engine)
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"), engine=engine)
     grid = sx.read_grid(ds_out2d, ds_zcoords)
     assert grid.n_node == 823
     assert grid.n_face == 791
@@ -20,10 +22,11 @@ def test_read_grid():
 def test_read_schism_nc():
     """Test opening a SCHISM netCDF file"""
     p_cur = Path(__file__).parent.absolute()
-    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    engine = _choose_netcdf_engine()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"), engine=engine)
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"), engine=engine)
     grid = sx.read_grid(ds_out2d, ds_zcoords)
-    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"))
+    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"), engine=engine)
     sxds = sx.read_schism_nc(grid, ds_data)
     assert sxds.sxgrid.n_node == 823
     assert sxds.sxgrid.n_face == 791
@@ -35,10 +38,11 @@ def test_read_schism_nc_preserves_attrs():
     Test conservation of dataset-level attrs in read_schism_nc.
     """
     p_cur = Path(__file__).parent.absolute()
-    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    engine = _choose_netcdf_engine()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"), engine=engine)
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"), engine=engine)
     grid = sx.read_grid(ds_out2d, ds_zcoords)
-    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"))
+    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"), engine=engine)
 
     # Attach sample global attributes to the source dataset.
     sample_attrs = {
@@ -71,12 +75,17 @@ def test_open_ts_dataset():
 def test_read_schism_nc_preserves_native_dtype():
     """Test that read_schism_nc preserves native float32 dtype without where-masking."""
     p_cur = Path(__file__).parent.absolute()
-    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"))
-    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"))
+    engine = _choose_netcdf_engine()
+    ds_out2d = xr.open_dataset(str(p_cur / "testdata/out2d_1.nc"), engine=engine)
+    ds_zcoords = xr.open_dataset(str(p_cur / "testdata/zCoordinates_1.nc"), engine=engine)
     grid = sx.read_grid(ds_out2d, ds_zcoords)
 
     # Open with chunks to ensure Dask arrays are used
-    ds_data = xr.open_dataset(str(p_cur / "testdata/salinity_1.nc"), chunks={"time": 12})
+    ds_data = xr.open_dataset(
+        str(p_cur / "testdata/salinity_1.nc"),
+        engine=engine,
+        chunks={"time": 12},
+    )
     sxds = sx.read_schism_nc(grid, ds_data)
 
     assert sxds["salinity"].dtype == np.float32
