@@ -17,6 +17,7 @@ from suxarray.core.api import _choose_netcdf_engine
 from suxarray.io._schismgrid import (
     _calculate_edge_z,
     _calculate_face_z,
+    _read_schism_grid,
     _rename_coords,
 )
 from uxarray.io._ugrid import _read_ugrid
@@ -157,3 +158,31 @@ def test_calculate_edge_z_values(calc_inputs):
     expected = z_raw[:, EDGE_NODES, -1].mean(axis=1)  # (time,)
     np.testing.assert_allclose(edge_z.values[:, EDGE_IDX, -1],
                                expected, rtol=1e-5)
+
+
+# _read_schism_grid
+
+def test_read_schism_grid_without_zcoords():
+    """_read_schism_grid skips _assign_z_coords when zCoordinates is absent."""
+    engine = _choose_netcdf_engine()
+    ds_out2d_raw = xr.open_dataset(str(TESTDATA / "out2d_1.nc"), engine=engine)
+
+    ds_grid, ds_sgrid_info = _read_schism_grid(ds_out2d_raw)
+
+    for z_var in ("node_z", "edge_z", "face_z", "node_z_3d", "edge_z_3d", "face_z_3d"):
+        assert z_var not in ds_grid.variables
+    assert "zCoordinates" not in ds_sgrid_info.variables
+    assert "dryFlagNode" in ds_sgrid_info.variables
+
+
+def test_read_schism_grid_with_zcoords_dataset_missing_zcoordinates():
+    """_read_schism_grid skips _assign_z_coords when ds_zcoords has no zCoordinates."""
+    engine = _choose_netcdf_engine()
+    ds_out2d_raw = xr.open_dataset(str(TESTDATA / "out2d_1.nc"), engine=engine)
+    ds_zcoords_empty = xr.Dataset()
+
+    ds_grid, ds_sgrid_info = _read_schism_grid(ds_out2d_raw, ds_zcoords_empty)
+
+    for z_var in ("node_z", "edge_z", "face_z", "node_z_3d", "edge_z_3d", "face_z_3d"):
+        assert z_var not in ds_grid.variables
+    assert "zCoordinates" not in ds_sgrid_info.variables

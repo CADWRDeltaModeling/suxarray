@@ -39,7 +39,7 @@ def _read_schism_grid(
     xr.Dataset
         SCHISM grid information dataset
     """
-    # We want to move time dependent variables to ds_zcoords from ds_outd2
+    # We want to move time dependent variables to ds_zcoords from ds_out2d
     # ds_out2d will contain only static information.
 
     for varname in SCHISM_GRID_TIME_VARIABLES:
@@ -68,16 +68,20 @@ def _read_schism_grid(
 
     if ds_zcoords is not None:
         dim_dict_zcoords = {
-            "nSCHISM_hgrid_node": "n_node",
-            "nSCHISM_hgrid_edge": "n_edge",
-            "nSCHISM_hgrid_face": "n_face",
+            k: v
+            for k, v in {
+                "nSCHISM_hgrid_node": "n_node",
+                "nSCHISM_hgrid_edge": "n_edge",
+                "nSCHISM_hgrid_face": "n_face",
+                "nSCHISM_vgrid_layers": "n_layer",
+            }.items()
+            if k in ds_zcoords.dims
         }
-        ds_zcoords = ds_zcoords.swap_dims(dim_dict_zcoords)
-        if "nSCHISM_vgrid_layers" in ds_zcoords.dims:
-            ds_zcoords = ds_zcoords.swap_dims({"nSCHISM_vgrid_layers":
-                                               "n_layer"})
+        if dim_dict_zcoords:
+            ds_zcoords = ds_zcoords.swap_dims(dim_dict_zcoords)
 
-        ds_out2d = _assign_z_coords(ds_out2d, ds_zcoords)
+        if "zCoordinates" in ds_zcoords:
+            ds_out2d = _assign_z_coords(ds_out2d, ds_zcoords)
 
     ds_sgrid_info = xr.Dataset()
     for varname in SCHISM_GRID_TIME_VARIABLES:
