@@ -209,6 +209,78 @@ def test_slice_and_depth_average(sxds_test_dask):
     assert da_da.isel(n_node=7, ignore_grid=True).values[0] == pytest.approx(10.334445, abs=1e-5)
 
 
+def test_depth_average_edge_cases():
+    from suxarray.utils.computing import _depth_average
+
+    # 1 time, 8 nodes, 4 layers
+    v = np.array(
+        [
+            [
+                [10.0, 20.0, 30.0, 40.0],  # node 0: normal, k=1 -> avg of [20,30,40] over [-2,-1,0] = 30.0
+                [10.0, 20.0, 30.0, 40.0],  # node 1: dry=1.0 -> NaN
+                [10.0, 20.0, 30.0, 40.0],  # node 2: dry=NaN -> NaN
+                [10.0, 20.0, 30.0, 40.0],  # node 3: k=-1 (out of range) -> NaN
+                [10.0, 20.0, 30.0, 40.0],  # node 4: k=3 (n_layer - 1) -> NaN
+                [10.0, 20.0, 30.0, 40.0],  # node 5: depth == 0.0 -> NaN
+                [10.0, 20.0, 30.0, 40.0],  # node 6: depth < 0.0 -> NaN
+                [10.0, 20.0, 30.0, 40.0],  # node 7: zs[k] is NaN -> NaN
+            ]
+        ],
+        dtype=np.float32,
+    )
+    zs = np.array(
+        [
+            [
+                [-3.0, -2.0, -1.0, 0.0],
+                [-3.0, -2.0, -1.0, 0.0],
+                [-3.0, -2.0, -1.0, 0.0],
+                [-3.0, -2.0, -1.0, 0.0],
+                [-3.0, -2.0, -1.0, 0.0],
+                [-3.0, 0.0, 0.0, 0.0],
+                [-3.0, 1.0, 0.5, 0.0],
+                [-3.0, np.nan, -1.0, 0.0],
+            ]
+        ],
+        dtype=np.float32,
+    )
+    k = np.array([1, 1, 1, -1, 3, 1, 1, 1], dtype=np.int32)
+    dry = np.array([[0.0, 1.0, np.nan, 0.0, 0.0, 0.0, 0.0, 0.0]], dtype=np.float32)
+
+    res = _depth_average(v, zs, k, dry)
+    assert res.shape == (1, 8)
+    assert res.dtype == np.float32
+    assert res[0, 0] == pytest.approx(30.0, abs=1e-5)
+    assert np.all(np.isnan(res[0, 1:]))
+
+    # Float k with NaN and integer v
+    v_int = np.array([[[10, 20, 30, 40], [10, 20, 30, 40]]], dtype=np.int32)
+    k_float = np.array([1.0, np.nan], dtype=np.float32)
+    res_int = _depth_average(v_int, zs[:, :2], k_float, dry[:, :2])
+    assert np.issubdtype(res_int.dtype, np.floating)
+    assert res_int[0, 0] == pytest.approx(30.0, abs=1e-5)
+    assert np.isnan(res_int[0, 1])
+
+
+def test_depth_average_dimensions(sxds_test_dask):
+    from suxarray.utils.computing import _depth_average
+
+    # 1D and 2D direct kernel calls
+    zs_1d = np.array([-2.0, -1.0, 0.0], dtype=np.float32)
+    v_1d = np.array([10.0, 20.0, 30.0], dtype=np.float32)
+    res_1d = _depth_average(v_1d, zs_1d, np.array(0, dtype=np.int32), np.array(0.0, dtype=np.float32))
+    assert res_1d.shape == ()
+    assert float(res_1d) == pytest.approx(20.0, abs=1e-5)
+
+    # SxDataArray sliced (2D) and transposed (3D)
+    da_t0 = sxds_test_dask["salinity"].isel(time=0).depth_average()
+    assert da_t0.dims == ("n_node",)
+    assert da_t0.isel(n_node=439, ignore_grid=True).values == pytest.approx(11.961535, abs=1e-5)
+
+    da_T = sxds_test_dask["salinity"].transpose("n_node", "time", "n_layer").depth_average()
+    assert da_T.dims == ("n_node", "time")
+    assert da_T.isel(n_node=439, time=0, ignore_grid=True).values == pytest.approx(11.961535, abs=1e-5)
+
+
 # def test_interpolate_xy(sxds_test_dask):
 #     da = sxds_test_dask["salinity"]
 #     da.interpolate_xy(1.0, 1.0)
