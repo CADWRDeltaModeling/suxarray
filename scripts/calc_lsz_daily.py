@@ -43,39 +43,6 @@ def parse_thresholds(val: list[float] | tuple | str | float) -> list[float]:
     return [6.0]
 
 
-def get_face_areas(
-    path_out2d: Path,
-    path_zcoords: Path | None = None,
-    face_dim: str = "n_face",
-) -> xr.DataArray:
-    """Compute 2D planar face areas from SCHISM out2d file using suxarray Grid.face_areas.
-
-    Parameters
-    ----------
-    path_out2d : Path
-        Path to SCHISM out2d NetCDF file.
-    path_zcoords : Path, optional
-        Unused; retained for backward compatibility.
-    face_dim : str
-        Dimension name for faces (e.g. 'n_face' or 'nMesh2_face').
-
-    Returns
-    -------
-    xr.DataArray
-        Planar face areas in square meters (m^2).
-    """
-    ds_out2d = (
-        xr.open_dataset(path_out2d, engine=_choose_netcdf_engine())
-        .drop_dims("time", errors="ignore")
-        .drop_vars(["bottom_index_node"], errors="ignore")
-    )
-    grid = sx.read_grid(ds_out2d)
-    da_face_areas = grid.face_areas.copy()
-    if da_face_areas.dims[0] != face_dim:
-        da_face_areas = da_face_areas.rename({da_face_areas.dims[0]: face_dim})
-    return da_face_areas
-
-
 def shift_30min_up(da: xr.DataArray) -> xr.DataArray:
     """Shift time coordinate 30 minutes up to align daily resample bins with hour boundary."""
     return da.assign_coords(time=da.coords["time"] - pd.to_timedelta("30m"))
@@ -121,7 +88,9 @@ def calc_lsz_single(
 
     # 3. Compute planar face areas using suxarray Grid.face_areas
     logger.info("Computing planar face areas for mesh geometry...")
-    da_face_areas = get_face_areas(path_out2d, path_zcoords=path_zcoords, face_dim=face_dim)
+    da_face_areas = sx.open_grid(path_out2d).face_areas
+    if da_face_areas.dims[0] != face_dim:
+        da_face_areas = da_face_areas.rename({da_face_areas.dims[0]: face_dim})
 
     # Precompute subregion masks and static subregion areas once
     region_masks = {region: (ds_subregions[region] == 1).values for region in list_regions}

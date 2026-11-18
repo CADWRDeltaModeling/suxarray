@@ -14,15 +14,19 @@ as examples for building related processing applications.
 | [`calc_da_daily.py`](calc_da_daily.py) | Processes a single day of SCHISM output and computes depth-averaged values at mesh nodes and faces. |
 | [`calc_da_multi_days.py`](calc_da_multi_days.py) | Processes one or more days of SCHISM output in parallel and computes depth-averaged values at mesh nodes and faces. |
 | [`calc_lsz_daily.py`](calc_lsz_daily.py) | Calculates daily low-salinity-zone (LSZ) areas for one or more salinity thresholds, both over the full mesh and within named subregions. |
+| [`calc_lsz_temp_daily.py`](calc_lsz_temp_daily.py) | Calculates daily LSZ areas constrained by both daily mean salinity and daily maximum temperature thresholds. |
+| [`calc_lsz_temp_turbidity.py`](calc_lsz_temp_turbidity.py) | Calculates daily LSZ areas constrained by salinity, temperature, and log-turbidity (`> ln(12)`) thresholds over May 1–November 30. |
 
 ## Workflow
 
 The scripts support a typical two-stage workflow:
 
 1. Use `calc_da_daily.py` (for a single day) or `calc_da_multi_days.py` (for
-   multiple days in parallel) to depth-average a variable such as salinity.
-2. Combine or provide the resulting face values to `calc_lsz_daily.py`, then
-   calculate daily LSZ areas.
+   multiple days in parallel) to depth-average variables such as salinity and
+   temperature.
+2. Combine or provide the resulting face values to `calc_lsz_daily.py`,
+   `calc_lsz_temp_daily.py`, or `calc_lsz_temp_turbidity.py` to calculate daily
+   LSZ areas.
 
 ## Depth-Averaging a Single Day
 
@@ -126,6 +130,63 @@ retained for backward compatibility (it is not required for 2D face areas).
 the Dask chunking JSON for the salinity input (default `'{"time": -1}'`), and
 `--no-compress` to disable NetCDF zlib compression.
 
+## Calculating Daily LSZ + Temperature Areas
+
+`calc_lsz_temp_daily.py` reads postprocessed face-centered depth-averaged
+salinity (`depth_averaged_salinity_at_face`) and temperature
+(`depth_averaged_temperature_at_face`) NetCDF files, computes daily mean
+salinity and daily maximum temperature, and calculates the area where both are
+below each requested `(SALINITY, TEMPERATURE)` threshold pair.
+
+For each threshold pair (default `6.0 22.0`), the script writes CSV outputs:
+
+- `lsz_less_than_<sal>_<temp>.csv`: total LSZ area for the full mesh
+- `lsz_area_less_than_<sal>_<temp>.csv`: LSZ and total area for each subregion
+
+Example:
+
+```bash
+python scripts/calc_lsz_temp_daily.py \
+  --path_out2d /data/schism/out2d_1.nc \
+  --subregion_fn /data/masks/subregions.nc \
+  --path_salinity_nc /data/processed/depth_averaged_salinity_at_face.nc \
+  --path_temperature_nc /data/processed/depth_averaged_temperature_at_face.nc \
+  --output-dir /data/lsz_temp \
+  --thresholds 6.0 22.0 \
+  --thresholds 2.0 20.0
+```
+
+## Calculating Daily LSZ + Temperature + Turbidity Areas
+
+`calc_lsz_temp_turbidity.py` extends the salinity-and-temperature LSZ
+calculation with a daily log-turbidity constraint (`log turbidity > ln(12)`)
+interpolated from a 214-row coarse-grid May 1–November 30 data to the
+fine SCHISM faces. Dates outside May 1–November 30 are skipped.
+
+By default, the turbidity data, interpolation weights, and element
+mapping CSVs are loaded from `scripts/common/` (`ln_turbidity_quantile_95_fit.csv`,
+`weights_2019.csv`, and `elems_matrix_2019.csv`), or can be overridden with
+`--path_turbidity_csv`, `--path_weights_csv`, and `--path_elems_matrix_csv`.
+
+For each `(SALINITY, TEMPERATURE)` threshold pair (default `6.0 22.0`), the
+script writes CSV outputs:
+
+- `lsz_less_than_<sal>_<temp>_gt_ln12.csv`: total LSZ area for the full mesh
+- `lsz_area_less_than_<sal>_<temp>_gt_ln12.csv`: LSZ and total area for each
+  subregion
+
+Example:
+
+```bash
+python scripts/calc_lsz_temp_turbidity.py \
+  --path_out2d /data/schism/out2d_1.nc \
+  --subregion_fn /data/masks/subregions.nc \
+  --path_salinity_nc /data/processed/depth_averaged_salinity_at_face.nc \
+  --path_temperature_nc /data/processed/depth_averaged_temperature_at_face.nc \
+  --output-dir /data/lsz_temp_turbidity \
+  --thresholds 6.0 22.0
+```
+
 ## Common Requirements
 
 These scripts require the packages used by `suxarray`, plus:
@@ -134,8 +195,6 @@ These scripts require the packages used by `suxarray`, plus:
 - Dask
 - NumPy
 - pandas
+- SciPy (for `calc_lsz_temp_turbidity.py`)
 - xarray
 
-Set `HDF5_USE_FILE_LOCKING=FALSE` if shared NFS storage causes HDF5 lock hangs.
-The scripts set this environment variable automatically unless it is already
-defined.
