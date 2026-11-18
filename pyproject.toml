@@ -32,7 +32,7 @@ dependencies = [
 [project.optional-dependencies]
 vtk = ["vtk"]
 
-test = ["pytest>=3", "vtk"]
+test = ["pytest>=3", "pytest-cov", "vtk"]
 
 [project.urls]
 Homepage = "https://github.com/cadwrdeltamodeling/suxarray"
@@ -42,3 +42,14 @@ include = ["suxarray", "suxarray.*"]
 
 [project.scripts]
 suxarray = "suxarray.cli:main"
+
+[tool.coverage.run]
+source = ["suxarray"]
+omit = [
+    "suxarray/core/test_io.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+fail_under = 0

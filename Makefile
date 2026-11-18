@@ -59,10 +59,7 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source suxarray -m pytest
-	coverage report -m
-	coverage html
-	$(BROWSER) htmlcov/index.html
+	NUMBA_DISABLE_JIT=1 pytest --cov=suxarray --cov-report=term-missing --cov-report=html
 
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/suxarray.rst
