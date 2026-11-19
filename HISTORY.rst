@@ -2,6 +2,26 @@
 History
 =======
 
+v2026.11.0 (2026-11)
+--------------------
+This version migrates to ``uxarray`` v2026.10.1 and adds water-column integration, lazy coordinate handling, and performance improvements.
+
+Added
+^^^^^
+* Added water-column prism volume, ocean mass, and generic nodal variable integration functions with Dask parallelization support.
+* Added lazy face and edge z-coordinate calculations and graceful handling when ``zCoordinates`` is absent.
+* Added example postprocessing scripts, ``pytest-cov`` coverage workflow, and JUnit CI checks.
+
+Changed
+^^^^^^^
+* Migrated to ``uxarray`` v2026.10.1 (Python >= 3.12) with native planar and spherical coordinate support.
+* Preferred ``h5netcdf`` engine across the package and preserved native dtypes for SCHISM outputs.
+* Optimized and hardened depth-averaging and Dask task graph performance.
+
+Fixed
+^^^^^
+* Prevented NaN propagation issues in prism layer integration.
+
 v2025.6.0 (2025-08)
 -------------------
 This version adopts ``uxarray`` v2025.6.0.
