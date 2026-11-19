@@ -8,6 +8,7 @@ Welcome to Suxarray's documentation!
    readme
    installation
    usage
+   modules
    history
    contributing
    authors

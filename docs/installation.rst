@@ -32,13 +32,21 @@ you through the process.
 From the source
 ---------------
 
-The source codes for ``suxarray`` can be downloaded from the `Github repo`_. Check out a branch you want to use. Install the source codes in the development mode as shown below:
+``suxarray`` requires Python >= 3.12 and ``uxarray==2026.10.1`` (along with ``h5netcdf[h5py]``, ``shapely>=2.0``, ``gsw>=3.6``, ``pyproj``, and ``Click>=7.0``).
+
+The source code for ``suxarray`` can be downloaded from the `Github repo`_. Check out the branch you want to use and install it in editable mode with ``pip``:
 
 .. code-block:: console
 
-    $ git clone git://github.com/cadwrdeltamodeling/suxarray
+    $ git clone https://github.com/cadwrdeltamodeling/suxarray.git
     $ cd suxarray
-    $ python setup.py install -e .
+    $ pip install -e .
+
+To include optional VTK export support, install the ``vtk`` extra:
+
+.. code-block:: console
+
+    $ pip install -e ".[vtk]"
 
 .. _Github repo: https://github.com/cadwrdeltamodeling/suxarray
 .. _tarball: https://github.com/cadwrdeltamodeling/suxarray/tarball/main
